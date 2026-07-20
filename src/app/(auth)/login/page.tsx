@@ -3,42 +3,66 @@ import { Train } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-between bg-[#f9f5f0] dark:bg-slate-950 font-sans p-6">
-      {/* Ambient warm glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-amber-600/5 blur-[120px] pointer-events-none" />
+    <div className="relative min-h-screen flex items-center justify-center lg:grid lg:grid-cols-12 overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans">
+      {/* Decorative ambient background glowing shapes */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-violet-500/10 dark:bg-violet-500/5 blur-[120px] pointer-events-none" />
 
-      {/* Header */}
-      <header className="max-w-7xl w-full mx-auto flex justify-between items-center relative z-10 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-[#c05621] text-white shadow-md shadow-[#c05621]/20">
-            <Train className="w-5 h-5" />
+      {/* Left panel - Decorative Railway Tracking Visuals (Desktop only) */}
+      <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative h-full flex-col justify-between p-12 bg-slate-900 text-white overflow-hidden">
+        {/* Abstract background grid */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent)]" />
+        
+        {/* Glow circles inside left panel */}
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 rounded-full bg-indigo-600/20 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/3 w-80 h-80 rounded-full bg-violet-600/25 blur-[90px] pointer-events-none" />
+
+        {/* Brand / Logo */}
+        <div className="relative z-10 flex items-center gap-2 text-xl tracking-tight">
+          <div className="p-2 rounded-xl bg-indigo-600/80 backdrop-blur border border-indigo-400/30 shadow-lg shadow-indigo-600/20">
+            <Train className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">ixigo</span>
+          <span className="text-2xl font-bold tracking-wide">Ixigo Live PNR Tracker</span>
         </div>
-        <div className="flex gap-4 text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer">
-          <span>Support</span>
-          <span>Careers</span>
-        </div>
-      </header>
 
-      {/* Center Form */}
-      <main className="w-full flex items-center justify-center py-12 relative z-10">
+        {/* Content Showcase */}
+        <div className="relative z-10 my-auto max-w-lg space-y-6">
+          <h1 className="text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.1] bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300">
+            Real-Time PNR & Train Status Tracking
+          </h1>
+          <p className="text-lg text-slate-300 font-light leading-relaxed">
+            Monitor booking details, route changes, delay updates, and coordinate travel plans in one sleek dashboard.
+          </p>
+          <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+            <div>
+              <span className="block text-2xl font-bold text-indigo-400">99.8%</span>
+              <span className="text-sm text-slate-400">Status Update Accuracy</span>
+            </div>
+            <div>
+              <span className="block text-2xl font-bold text-violet-400">&lt; 30s</span>
+              <span className="text-sm text-slate-400">Live Polling Intervals</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footnote */}
+        <div className="relative z-10 text-xs text-slate-500 font-medium">
+          &copy; {new Date().getFullYear()} LiveRail. Crafted for modern travel coordination.
+        </div>
+      </div>
+
+      {/* Right panel - Glassmorphic login form */}
+      <div className="lg:col-span-6 xl:col-span-5 w-full flex flex-col justify-center items-center p-6 sm:p-12 relative z-10">
+        {/* Mobile Header Logo */}
+        <div className="lg:hidden flex items-center gap-2 mb-8 text-xl text-slate-900 dark:text-white">
+          <div className="p-2 rounded-xl bg-indigo-600 border border-indigo-500/30 shadow-lg shadow-indigo-600/20">
+            <Train className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-2xl font-bold tracking-wide">Ixigo Live PNR Tracker</span>
+        </div>
+        
         <LoginForm />
-      </main>
-
-      {/* Footer */}
-      <footer className="max-w-7xl w-full mx-auto border-t border-slate-200 dark:border-slate-800/80 pt-6 pb-2 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-slate-400 dark:text-slate-500 font-medium relative z-10">
-        <div>
-          &copy; {new Date().getFullYear()} ixigo / LiveRail Technologies Ltd. India
-        </div>
-        <div className="flex gap-6">
-          <a href="#privacy" className="hover:underline hover:text-slate-600 dark:hover:text-slate-300">Privacy Policy</a>
-          <a href="#terms" className="hover:underline hover:text-slate-600 dark:hover:text-slate-300">Terms of Service</a>
-          <a href="#cookies" className="hover:underline hover:text-slate-600 dark:hover:text-slate-300">Cookie Settings</a>
-          <a href="#contact" className="hover:underline hover:text-slate-600 dark:hover:text-slate-300">Contact Us</a>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }
