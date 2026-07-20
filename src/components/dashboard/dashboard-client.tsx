@@ -23,7 +23,7 @@ import { BookingHistory, type BookingRecord } from "./booking-history";
 import { SavedFavorites } from "./saved-favorites";
 import { StaffPortal, type ManifestPassenger } from "./staff-portal";
 import { AdminPortal, type StaffMember } from "./admin-portal";
-import { SettingsPortal } from "./settings-portal";
+import { SettingsPortal } from "@/components/dashboard/settings-portal";
 import { DashboardOverview } from "./dashboard-overview";
 
 interface DashboardClientProps {

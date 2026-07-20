@@ -1,4 +1,5 @@
 "use client";
+// Settings & Security Portal Component
 
 import { useState } from "react";
 import {
