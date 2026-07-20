@@ -15,13 +15,16 @@ import {
   Volume2, 
   Search, 
   Activity, 
-  Users 
+  Users,
+  LayoutDashboard 
 } from "lucide-react";
 import { PnrTracker } from "./pnr-tracker";
 import { BookingHistory, type BookingRecord } from "./booking-history";
 import { SavedFavorites } from "./saved-favorites";
 import { StaffPortal, type ManifestPassenger } from "./staff-portal";
 import { AdminPortal, type StaffMember } from "./admin-portal";
+import { SettingsPortal } from "./settings-portal";
+import { DashboardOverview } from "./dashboard-overview";
 
 interface DashboardClientProps {
   session: {
@@ -85,7 +88,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
   
   // Set tab defaults dynamically
   const [activeTab, setActiveTab] = useState<string>(
-    userRole === "staff" ? "manifest" : userRole === "admin" ? "overview" : "pnr"
+    userRole === "staff" ? "manifest" : "overview"
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedPnr, setSelectedPnr] = useState<string | null>(null);
@@ -115,6 +118,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
       ];
     }
     return [
+      { id: "overview", name: "Dashboard Overview", icon: LayoutDashboard },
       { id: "pnr", name: "Live PNR Tracker", icon: Train },
       { id: "history", name: "Booking History", icon: BookOpen },
       { id: "favorites", name: "Saved Favorites", icon: Star },
@@ -303,9 +307,24 @@ export function DashboardClient({ session }: DashboardClientProps) {
 
         {/* Tab Body */}
         <main className="flex-1 p-6 lg:p-8 mt-14 lg:mt-0 max-w-5xl w-full mx-auto animate-in fade-in duration-200">
-          {/* Passenger Views */}
+          {/* Settings View */}
+          {activeTab === "settings" ? (
+            <SettingsPortal user={session?.user} />
+          ) : (
+            <>
           {userRole === "passenger" && (
             <>
+              {activeTab === "overview" && (
+                <DashboardOverview
+                  userName={userName}
+                  userRole={userRole}
+                  bookings={bookings}
+                  onNavigateTab={(tabId, pnr) => {
+                    if (pnr) setSelectedPnr(pnr);
+                    setActiveTab(tabId);
+                  }}
+                />
+              )}
               {activeTab === "pnr" && <PnrTracker initialPnr={selectedPnr} />}
               {activeTab === "history" && <BookingHistory bookings={bookings} />}
               {activeTab === "favorites" && (
@@ -339,6 +358,8 @@ export function DashboardClient({ session }: DashboardClientProps) {
               activeSubTab={activeTab as "overview" | "staff" | "passengers"}
               onSubTabChange={setActiveTab}
             />
+          )}
+            </>
           )}
         </main>
       </div>
