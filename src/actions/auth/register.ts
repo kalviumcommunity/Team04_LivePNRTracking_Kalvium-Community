@@ -2,8 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { RegisterSchema, type RegisterInput } from "@/lib/zod/auth";
-import { connectDB } from "@/lib/mongodb";
-import User from "@/models/User";
+import { db } from "@/lib/prisma";
 
 export async function register(values: RegisterInput) {
   const validatedFields = RegisterSchema.safeParse(values);
@@ -15,10 +14,10 @@ export async function register(values: RegisterInput) {
   const { name, email, password } = validatedFields.data;
 
   try {
-    await connectDB();
-
     // Check if email is already taken
-    const existing = await User.findOne({ email });
+    const existing = await db.user.findUnique({
+      where: { email },
+    });
     if (existing) {
       return { error: "An account with this email already exists." };
     }
@@ -27,11 +26,13 @@ export async function register(values: RegisterInput) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Save the new user
-    await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: "passenger",
+    await db.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: "passenger",
+      },
     });
 
     return { success: "Account created! Redirecting to sign in…" };

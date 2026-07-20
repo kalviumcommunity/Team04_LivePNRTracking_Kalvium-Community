@@ -2,12 +2,13 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/mongodb";
-import User from "@/models/User";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { db } from "@/lib/prisma";
 import { authConfig } from "@/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  adapter: PrismaAdapter(db),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -38,23 +39,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        // ── Real users stored in MongoDB ───────────────────────────────
+        // ── Real users stored in PostgreSQL ───────────────────────────
         try {
-          await connectDB();
-          const user = await User.findOne({ email }).select("+password");
+          const user = await db.user.findUnique({
+            where: { email },
+          });
           if (!user || !user.password) return null;
 
           const valid = await bcrypt.compare(password, user.password);
           if (!valid) return null;
 
           return {
-            id: user._id.toString(),
+            id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
             image: user.image,
           };
-        } catch {
+        } catch (e) {
+          console.error("Authorize error:", e);
           return null;
         }
       },
