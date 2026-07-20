@@ -54,7 +54,7 @@ export function LoginForm() {
         } else if (data?.success) {
           setSuccess(data.success);
         }
-      } catch (err) {
+      } catch {
         setError("Something went wrong. Please try again.");
       }
     });

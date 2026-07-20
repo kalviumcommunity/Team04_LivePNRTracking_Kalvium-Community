@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterSchema, type RegisterInput } from "@/lib/zod/auth";
 import { register } from "@/actions/auth/register";
@@ -26,7 +26,7 @@ export function RegisterForm() {
   const {
     register: registerField,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<RegisterInput>({
@@ -40,7 +40,7 @@ export function RegisterForm() {
     },
   });
 
-  const acceptTerms = watch("acceptTerms");
+  const acceptTerms = useWatch({ control, name: "acceptTerms" });
 
   const onSubmit = (values: RegisterInput) => {
     setError("");
