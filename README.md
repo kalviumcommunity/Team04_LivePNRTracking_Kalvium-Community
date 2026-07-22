@@ -16,6 +16,27 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## 🗄️ Database & Prisma Setup (For Team Members)
+
+To initialize and populate your local SQLite database with test users, train bookings, and favorites:
+
+```bash
+# 1. Sync database schema
+npx prisma db push
+
+# 2. Seed test data (creates demo@railwaypnr.com, bookings, favorites)
+npx prisma db seed
+
+# 3. (Optional) Open Prisma Studio database viewer
+npx prisma studio
+```
+
+### 🔑 Demo Login Credentials
+- **Demo User**: `demo@railwaypnr.com` | **Password**: `password123`
+- **Passenger User**: `passenger@railwaypnr.com` | **Password**: `password123`
+- **Staff User**: `staff@railwaypnr.com` | **Password**: `password123`
+- **Admin User**: `admin@railwaypnr.com` | **Password**: `password123`
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
