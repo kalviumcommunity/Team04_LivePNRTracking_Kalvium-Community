@@ -90,7 +90,9 @@ export function DashboardClient({ session }: DashboardClientProps) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPortalData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole]);
 
   // Navigation specs per role

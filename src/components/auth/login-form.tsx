@@ -97,7 +97,7 @@ export function LoginForm() {
                 placeholder="you@example.com"
                 disabled={isPending}
                 {...register("email")}
-                className={`bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus-visible:ring-indigo-500/20 text-slate-900 dark:text-slate-100 ${
+                className={`bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:ring-amber-500/20 text-slate-900 dark:text-slate-100 ${
                   errors.email ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : ""
                 }`}
               />
@@ -118,7 +118,7 @@ export function LoginForm() {
               </Label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline hover:text-indigo-500"
+                className="text-xs text-[#c05621] dark:text-orange-400 hover:underline hover:text-[#a64819]"
               >
                 Forgot password?
               </Link>
@@ -130,7 +130,7 @@ export function LoginForm() {
                 placeholder="••••••••"
                 disabled={isPending}
                 {...register("password")}
-                className={`bg-white/50 dark:bg-slate-900/50 pr-10 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus-visible:ring-indigo-500/20 text-slate-900 dark:text-slate-100 ${
+                className={`bg-white/50 dark:bg-slate-900/50 pr-10 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:ring-amber-500/20 text-slate-900 dark:text-slate-100 ${
                   errors.password ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : ""
                 }`}
               />
@@ -170,7 +170,7 @@ export function LoginForm() {
         <CardFooter className="flex flex-col gap-4 pt-2">
           <Button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-medium shadow-lg shadow-indigo-500/25 dark:shadow-none transition-all"
+            className="w-full bg-[#c05621] hover:bg-[#a64819] dark:bg-[#c05621] dark:hover:bg-[#a64819] text-white font-medium shadow-lg shadow-[#c05621]/15 dark:shadow-none transition-all"
             disabled={isPending}
           >
             {isPending ? (
@@ -226,13 +226,13 @@ export function LoginForm() {
           </Button>
 
           {/* Helper credentials note */}
-          <div className="w-full mt-2 p-3 rounded-lg border border-indigo-100 dark:border-indigo-950/30 bg-indigo-50/30 dark:bg-indigo-950/10 text-xs text-indigo-800 dark:text-indigo-400 flex items-start justify-between gap-2">
+          <div className="w-full mt-2 p-3 rounded-lg border border-[#eaddcd] dark:border-slate-800/80 bg-amber-50/20 dark:bg-slate-900/20 text-xs text-amber-900 dark:text-amber-400 flex items-start justify-between gap-2">
             <div className="flex gap-2">
-              <HelpCircle className="w-4 h-4 mt-0.5 shrink-0 text-indigo-500" />
+              <HelpCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-650" />
               <div className="space-y-1">
                 <span className="font-semibold block">Demo Account Details</span>
-                <p>Email: <code className="bg-indigo-100/50 dark:bg-indigo-950/50 px-1 py-0.5 rounded font-mono">demo@railwaypnr.com</code></p>
-                <p>Password: <code className="bg-indigo-100/50 dark:bg-indigo-950/50 px-1 py-0.5 rounded font-mono">password123</code></p>
+                <p>Email: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">demo@railwaypnr.com</code></p>
+                <p>Password: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">password123</code></p>
               </div>
             </div>
             <Button
@@ -240,7 +240,7 @@ export function LoginForm() {
               variant="outline"
               size="sm"
               onClick={handleAutofill}
-              className="text-xs h-7 px-2 border-indigo-200 dark:border-indigo-900 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400"
+              className="text-xs h-7 px-2 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400"
             >
               Autofill
             </Button>
@@ -248,7 +248,7 @@ export function LoginForm() {
           
           <p className="text-center text-xs text-slate-500 dark:text-slate-400">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+            <Link href="/register" className="text-[#c05621] dark:text-orange-400 font-bold hover:underline">
               Sign up
             </Link>
           </p>
