@@ -1,49 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Plus, RefreshCw, Calendar, Clock, ArrowRight, ShieldCheck, Tag, Ticket } from "lucide-react";
+import { Star, Plus, RefreshCw, Calendar, Clock, ArrowRight, ShieldCheck, Tag, Ticket, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-interface FavoriteRoute {
+interface BookingRecord {
+  pnr: string;
+  date: string;
   trainName: string;
   trainNo: string;
-  from: string;
-  fromCode: string;
-  to: string;
-  toCode: string;
-  schedule: string;
-  duration: string;
-  pnr: string;
+  status: "CNF" | "WL" | "CAN";
+  statusText: string;
+  fare: string;
+  fromStation?: string;
+  toStation?: string;
+  seat?: string;
 }
 
-const FAVORITE_ROUTES: FavoriteRoute[] = [
-  {
-    trainName: "Rajdhani Express",
-    trainNo: "12425",
-    from: "New Delhi",
-    fromCode: "NDLS",
-    to: "Kanpur Central",
-    toCode: "CNB",
-    schedule: "Daily Runs",
-    duration: "4h 45m",
-    pnr: "4109857123",
-  },
-  {
-    trainName: "Shatabdi Express",
-    trainNo: "12004",
-    from: "New Delhi",
-    fromCode: "NDLS",
-    to: "Lucknow Jn",
-    toCode: "LJN",
-    schedule: "Mon, Wed, Fri",
-    duration: "6h 30m",
-    pnr: "1234567890",
-  },
-];
-
 interface SavedFavoritesProps {
+  favorites: { id: string; pnr: string; label: string }[];
+  bookings: BookingRecord[];
+  onAddFavorite: (pnr: string, label: string) => void;
+  onDeleteFavorite: (id: string) => void;
   onCheckStatus: (pnr: string) => void;
   onBookTicket: (
     trainName: string,
@@ -57,12 +37,43 @@ interface SavedFavoritesProps {
   ) => void;
 }
 
-export function SavedFavorites({ onCheckStatus, onBookTicket }: SavedFavoritesProps) {
+export function SavedFavorites({ 
+  favorites, 
+  bookings, 
+  onAddFavorite, 
+  onDeleteFavorite, 
+  onCheckStatus, 
+  onBookTicket 
+}: SavedFavoritesProps) {
   const [bookingIndex, setBookingIndex] = useState<number | null>(null);
   const [passengerName, setPassengerName] = useState("Ramesh Rathore");
   const [travelClass, setTravelClass] = useState("AC 3 Tier (3A)");
 
-  const handleBookSubmit = (route: FavoriteRoute) => {
+  // Form states for creating new favorite
+  const [isAdding, setIsAdding] = useState(false);
+  const [newPnr, setNewPnr] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+  const [formError, setFormError] = useState("");
+
+  // Map database favorites to UI layout details
+  const routes = favorites.map((fav) => {
+    const booking = bookings.find((b) => b.pnr === fav.pnr);
+    return {
+      id: fav.id,
+      pnr: fav.pnr,
+      trainName: booking ? booking.trainName : "Express Special",
+      trainNo: booking ? booking.trainNo : "12000",
+      from: booking?.fromStation ?? "New Delhi",
+      fromCode: booking?.fromStation ?? "NDLS",
+      to: booking?.toStation ?? "Mumbai Central",
+      toCode: booking?.toStation ?? "MMCT",
+      schedule: "Daily Runs",
+      duration: "4h 45m",
+      label: fav.label || "Pinned Route",
+    };
+  });
+
+  const handleBookSubmit = (route: typeof routes[0]) => {
     if (!passengerName) return;
     onBookTicket(
       route.trainName,
@@ -77,6 +88,26 @@ export function SavedFavorites({ onCheckStatus, onBookTicket }: SavedFavoritesPr
     setBookingIndex(null);
   };
 
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!/^\d{10}$/.test(newPnr)) {
+      setFormError("PNR must be exactly 10 numeric digits.");
+      return;
+    }
+
+    if (!newLabel) {
+      setFormError("Please enter a custom name label.");
+      return;
+    }
+
+    onAddFavorite(newPnr, newLabel);
+    setNewPnr("");
+    setNewLabel("");
+    setIsAdding(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner section */}
@@ -87,19 +118,28 @@ export function SavedFavorites({ onCheckStatus, onBookTicket }: SavedFavoritesPr
 
       {/* Grid of Favorite Cards + Add New Button */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {FAVORITE_ROUTES.map((route, index) => {
+        {routes.map((route, index) => {
           const isBooking = bookingIndex === index;
           return (
-            <Card key={index} className="border border-[#eaddcd] dark:border-slate-800 bg-white/70 dark:bg-slate-950/40 backdrop-blur-xl shadow-md flex flex-col justify-between overflow-hidden relative min-h-[260px] transition-all duration-300">
+            <Card key={route.id} className="border border-[#eaddcd] dark:border-slate-800 bg-white/70 dark:bg-slate-950/40 backdrop-blur-xl shadow-md flex flex-col justify-between overflow-hidden relative min-h-[260px] transition-all duration-300">
               <CardHeader className="pb-3 border-b border-[#f2eae1] dark:border-slate-800/50">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">Frequent Route</span>
+                    <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">Favorite Route</span>
                     <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100">{route.trainName}</CardTitle>
-                    <CardDescription className="text-xs">#{route.trainNo}</CardDescription>
+                    <CardDescription className="text-xs">PNR: {route.pnr} • #{route.trainNo}</CardDescription>
                   </div>
-                  <div className="p-1.5 rounded-full bg-amber-50 dark:bg-slate-900 border border-amber-200/50 text-[#c05621]">
-                    <Star className="w-4 h-4 fill-current" />
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => onDeleteFavorite(route.id)}
+                      className="p-1.5 rounded-full hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors"
+                      title="Remove Favorite"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div className="p-1.5 rounded-full bg-amber-50 dark:bg-slate-900 border border-amber-200/50 text-[#c05621]">
+                      <Star className="w-4 h-4 fill-current" />
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -207,16 +247,74 @@ export function SavedFavorites({ onCheckStatus, onBookTicket }: SavedFavoritesPr
           );
         })}
 
-        {/* Add New Favorite Card */}
-        <Card className="border-2 border-dashed border-[#d8c3ae] dark:border-slate-800 bg-[#fdfcfb]/40 dark:bg-slate-950/10 flex flex-col items-center justify-center p-6 text-center hover:bg-[#fbf9f6]/80 hover:border-[#c05621] dark:hover:border-slate-700 transition-all cursor-pointer min-h-[260px]">
-          <div className="p-3 rounded-full bg-amber-50 dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-[#c05621] mb-3">
-            <Plus className="w-5 h-5" />
-          </div>
-          <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">Add New Favorite</span>
-          <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[180px]">
-            Save a new PNR number or frequent train route for fast lookup.
-          </span>
-        </Card>
+        {/* Add New Favorite Card / Form */}
+        {isAdding ? (
+          <Card className="border border-amber-300 dark:border-slate-800 bg-white/90 p-5 flex flex-col justify-between min-h-[260px]">
+            <form onSubmit={handleAddSubmit} className="space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-2">
+                <span className="text-[10px] uppercase font-bold text-amber-700 block">Pin New Route</span>
+                <div>
+                  <label htmlFor="fav-pnr" className="text-[9px] font-bold text-slate-500 uppercase">10-Digit PNR</label>
+                  <Input
+                    id="fav-pnr"
+                    value={newPnr}
+                    onChange={(e) => setNewPnr(e.target.value)}
+                    placeholder="e.g. 4109857123"
+                    className="h-8 text-xs bg-white mt-0.5"
+                    maxLength={10}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="fav-label" className="text-[9px] font-bold text-slate-500 uppercase">Custom Label</label>
+                  <Input
+                    id="fav-label"
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    placeholder="e.g. Home to Delhi Trip"
+                    className="h-8 text-xs bg-white mt-0.5"
+                  />
+                </div>
+                {formError && (
+                  <span className="text-[10px] text-red-500 font-semibold block">{formError}</span>
+                )}
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsAdding(false);
+                    setFormError("");
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs h-8"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="flex-1 text-xs h-8 bg-[#c05621] hover:bg-[#a64819] text-white"
+                >
+                  Save Favorite
+                </Button>
+              </div>
+            </form>
+          </Card>
+        ) : (
+          <Card 
+            onClick={() => setIsAdding(true)}
+            className="border-2 border-dashed border-[#d8c3ae] dark:border-slate-800 bg-[#fdfcfb]/40 dark:bg-slate-950/10 flex flex-col items-center justify-center p-6 text-center hover:bg-[#fbf9f6]/80 hover:border-[#c05621] dark:hover:border-slate-700 transition-all cursor-pointer min-h-[260px]"
+          >
+            <div className="p-3 rounded-full bg-amber-50 dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-[#c05621] mb-3">
+              <Plus className="w-5 h-5" />
+            </div>
+            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">Add New Favorite</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[180px]">
+              Save a new PNR number or frequent train route for fast lookup.
+            </span>
+          </Card>
+        )}
       </div>
 
       {/* Recent Route Searches list */}

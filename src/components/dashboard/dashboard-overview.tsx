@@ -25,6 +25,9 @@ interface BookingRecord {
   status: string;
   statusText: string;
   fare: string;
+  fromStation?: string;
+  toStation?: string;
+  seat?: string;
 }
 
 interface DashboardOverviewProps {
@@ -32,6 +35,8 @@ interface DashboardOverviewProps {
   userRole: string;
   bookings: BookingRecord[];
   onNavigateTab: (tabId: string, pnr?: string) => void;
+  favorites: { id: string; pnr: string; label: string }[];
+  searches: string[];
 }
 
 export function DashboardOverview({
@@ -39,17 +44,32 @@ export function DashboardOverview({
   userRole,
   bookings,
   onNavigateTab,
+  favorites,
+  searches,
 }: DashboardOverviewProps) {
-  const recentSearches = [
-    { pnr: "4109857123", train: "Rajdhani Express (12425)", route: "NDLS → CNB", status: "CNF", time: "10 mins ago" },
-    { pnr: "1234567890", train: "Shatabdi Express (12004)", route: "NDLS → LJN", status: "CNF", time: "1 hour ago" },
-    { pnr: "7103958261", train: "Garib Rath (12204)", route: "NDLS → ASR", status: "RAC", time: "Yesterday" },
-  ];
+  // Map SQLite searches to UI layout
+  const recentSearches = searches.map((pnr) => {
+    const booking = bookings.find((b) => b.pnr === pnr);
+    return {
+      pnr,
+      train: booking ? `${booking.trainName} (${booking.trainNo})` : "Live status query",
+      route: booking ? `${booking.fromStation} → ${booking.toStation}` : "Checked search",
+      status: booking ? booking.status : "CNF",
+      time: "Query logged",
+    };
+  });
 
-  const favoritePnrs = [
-    { pnr: "4109857123", name: "Home to Delhi Trip", train: "Rajdhani Express (12425)", date: "23 Dec 2026", seat: "A1/25 (CNF)" },
-    { pnr: "9876543210", name: "Weekend Lucknow Visit", train: "Vande Bharat (22436)", date: "28 Dec 2026", seat: "E1/18 (CNF)" },
-  ];
+  // Map SQLite favorites to UI layout
+  const favoritePnrs = favorites.map((fav) => {
+    const booking = bookings.find((b) => b.pnr === fav.pnr);
+    return {
+      pnr: fav.pnr,
+      name: fav.label || "Pinned Route",
+      train: booking ? `${booking.trainName} (${booking.trainNo})` : "Express Train",
+      date: booking ? booking.date : "Travel Date",
+      seat: booking ? `${booking.seat} (${booking.status})` : "Monitored PNR",
+    };
+  });
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@/auth";
+import { db } from "@/lib/prisma";
 
 const pnrParamSchema = z.string().regex(/^\d{10}$/, "PNR must be exactly 10 numeric digits.");
 
@@ -128,6 +130,47 @@ export async function GET(
         },
         { status: 400 }
       );
+    }
+
+    // Log search history if authenticated
+    try {
+      const session = await auth();
+      if (session?.user?.email) {
+        const dbUser = await db.user.findUnique({
+          where: { email: session.user.email },
+        });
+        if (dbUser) {
+          // Check if search exists to avoid duplication in short span
+          const recent = await db.searchHistory.findFirst({
+            where: { userId: dbUser.id, query: pnr },
+          });
+
+          if (recent) {
+            await db.searchHistory.update({
+              where: { id: recent.id },
+              data: { createdAt: new Date() },
+            });
+          } else {
+            await db.searchHistory.create({
+              data: {
+                query: pnr,
+                userId: dbUser.id,
+              },
+            });
+          }
+
+          // Create an audit log
+          await db.auditLog.create({
+            data: {
+              action: "TRACK_PNR",
+              details: `Searched PNR ${pnr}`,
+              userId: dbUser.id,
+            },
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to auto-save search history:", e);
     }
 
     // Lookup PNR in Database or generate dynamic response for valid 10-digit numeric PNR

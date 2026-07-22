@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { 
   Train, 
@@ -25,6 +25,9 @@ import { StaffPortal, type ManifestPassenger } from "./staff-portal";
 import { AdminPortal, type StaffMember } from "./admin-portal";
 import { SettingsPortal } from "@/components/dashboard/settings-portal";
 import { DashboardOverview } from "./dashboard-overview";
+import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite } from "@/actions/passenger";
+import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus } from "@/actions/admin";
+import { updatePassengerBoarding } from "@/actions/staff";
 
 interface DashboardClientProps {
   session: {
@@ -36,53 +39,6 @@ interface DashboardClientProps {
   } | null;
 }
 
-// Initial Booking Data
-const INITIAL_BOOKINGS: BookingRecord[] = [
-  {
-    pnr: "4109857123",
-    date: "23 Dec 2026",
-    trainName: "Rajdhani Express",
-    trainNo: "12425",
-    status: "CNF",
-    statusText: "Confirmed",
-    fare: "₹2,120",
-  },
-  {
-    pnr: "1234567890",
-    date: "24 Dec 2026",
-    trainName: "Shatabdi Express",
-    trainNo: "12004",
-    status: "CNF",
-    statusText: "Confirmed",
-    fare: "₹515",
-  },
-  {
-    pnr: "7103958261",
-    date: "14 Sep 2026",
-    trainName: "Garib Rath",
-    trainNo: "12204",
-    status: "CNF",
-    statusText: "Confirmed",
-    fare: "₹720",
-  },
-];
-
-// Initial Manifest/Passenger Data
-const INITIAL_PASSENGERS: ManifestPassenger[] = [
-  { id: "p1", name: "Ramesh Rathore", pnr: "4109857123", from: "NDLS", to: "CNB", trainNo: "12425", status: "Boarding", seat: "A1/25" },
-  { id: "p2", name: "Sunita Rathore", pnr: "4109857123", from: "NDLS", to: "CNB", trainNo: "12425", status: "Boarding", seat: "A1/26" },
-  { id: "p3", name: "Suresh Kumar", pnr: "1234567890", from: "NDLS", to: "LJN", trainNo: "12004", status: "Checked In", seat: "C2/14" },
-  { id: "p4", name: "Aman Gupta", pnr: "9876543210", from: "NDLS", to: "CNB", trainNo: "12425", status: "On-Board", seat: "B3/12" },
-  { id: "p5", name: "Vikas Verma", pnr: "4567890123", from: "NDLS", to: "LJN", trainNo: "12004", status: "No Show", seat: "C1/5" },
-];
-
-// Initial Staff Data
-const INITIAL_STAFF: StaffMember[] = [
-  { id: "s1", name: "Sanjay Sharma", email: "staff@railwaypnr.com", role: "staff", status: "Active", station: "New Delhi (NDLS)" },
-  { id: "s2", name: "Alok Singh", email: "alok@railwaypnr.com", role: "staff", status: "Active", station: "Kanpur (CNB)" },
-  { id: "s3", name: "Priya Patel", email: "priya@railwaypnr.com", role: "staff", status: "Inactive", station: "Lucknow (LJN)" },
-];
-
 export function DashboardClient({ session }: DashboardClientProps) {
   const userRole = session?.user?.role || "passenger";
   
@@ -93,13 +49,49 @@ export function DashboardClient({ session }: DashboardClientProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedPnr, setSelectedPnr] = useState<string | null>(null);
 
-  // Core Lifted States
-  const [bookings, setBookings] = useState<BookingRecord[]>(INITIAL_BOOKINGS);
-  const [passengers, setPassengers] = useState<ManifestPassenger[]>(INITIAL_PASSENGERS);
-  const [staff, setStaff] = useState<StaffMember[]>(INITIAL_STAFF);
+  // Core Lifted States (populated from SQLite backend)
+  const [bookings, setBookings] = useState<BookingRecord[]>([]);
+  const [passengers, setPassengers] = useState<ManifestPassenger[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [favorites, setFavorites] = useState<{ id: string; pnr: string; label: string }[]>([]);
+  const [searches, setSearches] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const userName = session?.user?.name || "Demo User";
   const userEmail = session?.user?.email || "demo@railwaypnr.com";
+
+  // Data Loading Trigger
+  const loadPortalData = async () => {
+    setLoading(true);
+    try {
+      if (userRole === "passenger") {
+        const userBookings = await getBookings();
+        setBookings(userBookings);
+        const favs = await getFavorites();
+        setFavorites(favs);
+        const history = await getSearchHistory();
+        setSearches(history);
+      } else if (userRole === "admin") {
+        const staffList = await getStaffMembers();
+        setStaff(staffList);
+        const pList = await getPassengersList();
+        setPassengers(pList);
+      } else if (userRole === "staff") {
+        // Staff manifests are loaded per-station inside the StaffPortal,
+        // but we can load all passengers as a fallback manifest list
+        const pList = await getPassengersList();
+        setPassengers(pList);
+      }
+    } catch (err) {
+      console.error("Error loading portal data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPortalData();
+  }, [userRole]);
 
   // Navigation specs per role
   const getNavigationItems = () => {
@@ -131,7 +123,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
   };
 
   // Passenger booking trigger
-  const handleBookTicket = (
+  const handleBookTicket = async (
     trainName: string,
     trainNo: string,
     fromCode: string,
@@ -141,60 +133,54 @@ export function DashboardClient({ session }: DashboardClientProps) {
     travelClass: string,
     passengerName: string
   ) => {
-    // Generate random PNR
-    const randomPnr = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-    const newBooking: BookingRecord = {
-      pnr: randomPnr,
-      date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+    const res = await bookTicket({
       trainName,
       trainNo,
-      status: "CNF",
-      statusText: "Confirmed",
-      fare: travelClass.includes("AC") ? "₹1,850" : "₹620",
-    };
+      fromCode,
+      from,
+      toCode,
+      to,
+      travelClass,
+      passengerName,
+    });
 
-    // Add booking record
-    setBookings([newBooking, ...bookings]);
-
-    // Add passenger manifest entry
-    const newManifest: ManifestPassenger = {
-      id: `p-${randomPnr}`,
-      name: passengerName,
-      pnr: randomPnr,
-      from: fromCode,
-      to: toCode,
-      trainNo,
-      status: "Boarding",
-      seat: "A2/40",
-    };
-    setPassengers([newManifest, ...passengers]);
-
-    // Shift view to booking history
-    setActiveTab("history");
+    if (res.success) {
+      // Refresh passenger booking history from database
+      await loadPortalData();
+      // Shift view to booking history
+      setActiveTab("history");
+    } else {
+      alert(res.error || "Failed to book ticket");
+    }
   };
 
-  // Staff updates
-  const handleUpdatePassengerStatus = (id: string, newStatus: ManifestPassenger["status"]) => {
-    setPassengers(
-      passengers.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
-    );
+  // Staff updates passenger manifest check-in status
+  const handleUpdatePassengerStatus = async (id: string, newStatus: ManifestPassenger["status"]) => {
+    const res = await updatePassengerBoarding(id, newStatus);
+    if (res.success) {
+      await loadPortalData();
+    } else {
+      alert("Failed to update boarding status.");
+    }
   };
 
   // Admin updates
-  const handleAddStaff = (newStaff: Omit<StaffMember, "id" | "role" | "status">) => {
-    const freshStaff: StaffMember = {
-      id: `s-${Math.random().toString(36).substring(2, 9)}`,
-      role: "staff",
-      status: "Active",
-      ...newStaff,
-    };
-    setStaff([...staff, freshStaff]);
+  const handleAddStaff = async (newStaff: Omit<StaffMember, "id" | "role" | "status">) => {
+    const res = await addStaffMember(newStaff);
+    if (res.success) {
+      await loadPortalData();
+    } else {
+      alert(res.error || "Failed to add staff member.");
+    }
   };
 
-  const handleToggleStaffStatus = (id: string) => {
-    setStaff(
-      staff.map((s) => (s.id === id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s))
-    );
+  const handleToggleStaffStatus = async (id: string) => {
+    const res = await toggleStaffStatus(id);
+    if (res.success) {
+      await loadPortalData();
+    } else {
+      alert("Failed to update staff status.");
+    }
   };
 
   const navigationItems = getNavigationItems();
@@ -307,8 +293,14 @@ export function DashboardClient({ session }: DashboardClientProps) {
 
         {/* Tab Body */}
         <main className="flex-1 p-6 lg:p-8 mt-14 lg:mt-0 max-w-5xl w-full mx-auto animate-in fade-in duration-200">
-          {/* Settings View */}
-          {activeTab === "settings" ? (
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[300px]">
+              <div className="flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600/30 border-t-amber-600" />
+                <span className="text-xs text-slate-400 font-medium">Connecting to central railway database...</span>
+              </div>
+            </div>
+          ) : activeTab === "settings" ? (
             <SettingsPortal user={session?.user} />
           ) : (
             <>
@@ -319,6 +311,8 @@ export function DashboardClient({ session }: DashboardClientProps) {
                   userName={userName}
                   userRole={userRole}
                   bookings={bookings}
+                  favorites={favorites}
+                  searches={searches}
                   onNavigateTab={(tabId, pnr) => {
                     if (pnr) setSelectedPnr(pnr);
                     setActiveTab(tabId);
@@ -328,7 +322,28 @@ export function DashboardClient({ session }: DashboardClientProps) {
               {activeTab === "pnr" && <PnrTracker initialPnr={selectedPnr} />}
               {activeTab === "history" && <BookingHistory bookings={bookings} />}
               {activeTab === "favorites" && (
-                <SavedFavorites onCheckStatus={handleCheckStatus} onBookTicket={handleBookTicket} />
+                <SavedFavorites 
+                  favorites={favorites} 
+                  bookings={bookings} 
+                  onAddFavorite={async (pnr, label) => {
+                    const res = await addFavorite(pnr, label);
+                    if (res.success) {
+                      await loadPortalData();
+                    } else {
+                      alert(res.error || "Failed to add favorite");
+                    }
+                  }}
+                  onDeleteFavorite={async (id) => {
+                    const res = await removeFavorite(id);
+                    if (res.success) {
+                      await loadPortalData();
+                    } else {
+                      alert(res.error || "Failed to delete favorite");
+                    }
+                  }}
+                  onCheckStatus={handleCheckStatus} 
+                  onBookTicket={handleBookTicket} 
+                />
               )}
             </>
           )}
