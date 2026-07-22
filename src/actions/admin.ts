@@ -119,9 +119,9 @@ export async function addStaffMember(data: {
 
     revalidatePath("/dashboard");
     return { success: true, staff: newStaff };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[ADD_STAFF_MEMBER]", error);
-    return { error: error.message || "Failed to create staff account." };
+    return { error: (error as Error).message || "Failed to create staff account." };
   }
 }
 
@@ -153,9 +153,9 @@ export async function toggleStaffStatus(id: string) {
 
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[TOGGLE_STAFF_STATUS]", error);
-    return { error: error.message || "Failed to toggle status." };
+    return { error: (error as Error).message || "Failed to toggle status." };
   }
 }
 
@@ -194,7 +194,7 @@ export async function getPassengersList() {
         to: b.toStation,
         trainNo: b.trainNo,
         status: b.boardingStatus as "Boarding" | "Checked In" | "On-Board" | "No Show",
-        seat: b.seat,
+        seat: b.seat || "",
       }));
     });
   } catch (error) {

@@ -46,7 +46,7 @@ export async function getManifest(station: string) {
       to: b.toStation,
       trainNo: b.trainNo,
       status: b.boardingStatus as "Boarding" | "Checked In" | "On-Board" | "No Show",
-      seat: b.seat,
+      seat: b.seat || "",
     }));
   } catch (error) {
     console.error("[GET_MANIFEST]", error);
@@ -77,9 +77,9 @@ export async function updatePassengerBoarding(bookingId: string, status: string)
 
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[UPDATE_PASSENGER_BOARDING]", error);
-    return { error: error.message || "Failed to update boarding status." };
+    return { error: (error as Error).message || "Failed to update boarding status." };
   }
 }
 
@@ -128,8 +128,8 @@ export async function broadcastOpsAlert(data: {
     });
 
     return { success: true, count: affectedBookings.length };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[BROADCAST_OPS_ALERT]", error);
-    return { error: error.message || "Failed to broadcast operations alert." };
+    return { error: (error as Error).message || "Failed to broadcast operations alert." };
   }
 }

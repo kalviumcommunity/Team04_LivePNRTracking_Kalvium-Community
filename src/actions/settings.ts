@@ -54,9 +54,9 @@ export async function updateProfile(data: { name: string; email: string }) {
 
     revalidatePath("/dashboard");
     return { success: "Profile details updated successfully!" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[UPDATE_PROFILE]", error);
-    return { error: error.message || "Failed to update profile." };
+    return { error: (error as Error).message || "Failed to update profile." };
   }
 }
 
@@ -96,9 +96,9 @@ export async function changePassword(data: { current: string; newPass: string })
     });
 
     return { success: "Password changed successfully!" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[CHANGE_PASSWORD]", error);
-    return { error: error.message || "Failed to change password." };
+    return { error: (error as Error).message || "Failed to change password." };
   }
 }
 
@@ -113,8 +113,8 @@ export async function deleteAccount() {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[DELETE_ACCOUNT]", error);
-    return { error: error.message || "Failed to delete account." };
+    return { error: (error as Error).message || "Failed to delete account." };
   }
 }
