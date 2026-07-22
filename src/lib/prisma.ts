@@ -1,41 +1,31 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
+// Prevent multiple instances of Prisma Client in development mode due to hot reloading.
+// We store the reference on the globalThis object which persists across module reloads.
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 let db: PrismaClient;
 
-function createClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL || "";
-  const isPostgres =
-    connectionString.startsWith("postgresql://") ||
-    connectionString.startsWith("postgres://");
-
-  if (isPostgres) {
-    try {
-      const { PrismaPg } = require("@prisma/adapter-pg");
-      const { Pool } = require("pg");
-      const pool = new Pool({ connectionString });
-      const adapter = new PrismaPg(pool);
-      return new PrismaClient({ adapter });
-    } catch {
-      return new PrismaClient();
-    }
-  }
-
-  return new PrismaClient();
-}
-
+// Configure connection pool and instantiate Prisma Client
 if (process.env.NODE_ENV === "production") {
-  db = createClient();
+  // In production, we instantiate a new Prisma client instance directly
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg(pool); // Use PrismaPg driver adapter for PostgreSQL
+  db = new PrismaClient({ adapter });
 } else {
+  // In development, check if a global instance already exists; otherwise create one
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createClient();
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const adapter = new PrismaPg(pool);
+    globalForPrisma.prisma = new PrismaClient({ adapter });
   }
+  // Reuse the globally stored client instance
   db = globalForPrisma.prisma;
 }
 
 export { db };
-
 

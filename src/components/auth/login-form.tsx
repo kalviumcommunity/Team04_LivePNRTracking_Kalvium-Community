@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, HelpCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -115,12 +116,12 @@ export function LoginForm() {
               <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 text-sm font-medium">
                 Password
               </Label>
-              <a
-                href="#forgot"
+              <Link
+                href="/forgot-password"
                 className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline hover:text-indigo-500"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <div className="relative">
               <Input
@@ -244,6 +245,13 @@ export function LoginForm() {
               Autofill
             </Button>
           </div>
+          
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+              Sign up
+            </Link>
+          </p>
         </CardFooter>
       </form>
     </Card>
