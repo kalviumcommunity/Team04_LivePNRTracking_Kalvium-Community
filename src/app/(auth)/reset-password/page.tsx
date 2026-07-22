@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Loader2, Eye, EyeOff, Train } from "lucide-react";
 
+import { resetPassword } from "@/actions/auth/reset-password";
+
 const ResetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
@@ -54,13 +56,16 @@ function ResetPasswordForm() {
     }
 
     startTransition(async () => {
-      // Mock API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await resetPassword({ token, password: values.password });
 
-      setSuccess("Your password has been successfully reset! Redirecting to sign in…");
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      if (response?.error) {
+        setError(response.error);
+      } else if (response?.success) {
+        setSuccess("Your password has been successfully reset! Redirecting to sign in…");
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      }
     });
   };
 

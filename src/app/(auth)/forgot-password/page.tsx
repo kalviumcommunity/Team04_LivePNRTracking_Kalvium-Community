@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Loader2, ArrowLeft, Train } from "lucide-react";
 import Link from "next/link";
 
+import { forgotPassword } from "@/actions/auth/forgot-password";
+
 const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
@@ -38,13 +40,12 @@ export default function ForgotPasswordPage() {
     setSuccess("");
 
     startTransition(async () => {
-      // Mock API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await forgotPassword(values);
       
-      if (values.email.endsWith("@error.com")) {
-        setError("We couldn't find an account associated with this email address.");
-      } else {
-        setSuccess("Password reset instructions have been sent to your email!");
+      if (response?.error) {
+        setError(response.error);
+      } else if (response?.success) {
+        setSuccess(response.success);
       }
     });
   };
