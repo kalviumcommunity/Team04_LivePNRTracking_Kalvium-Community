@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, FileText, Download, MessageSquare, PhoneCall, HelpCircle } from "lucide-react";
+import { Search, FileText, Download, MessageSquare, PhoneCall, HelpCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -14,6 +14,9 @@ export interface BookingRecord {
   status: "CNF" | "WL" | "CAN";
   statusText: string;
   fare: string;
+  fromStation?: string;
+  toStation?: string;
+  seat?: string;
 }
 
 interface BookingHistoryProps {
@@ -22,12 +25,43 @@ interface BookingHistoryProps {
 
 export function BookingHistory({ bookings }: BookingHistoryProps) {
   const [filterText, setFilterText] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { sender: "agent", text: "Hello! Welcome to 24/7 Live Railway Support. How can I assist you with your booking today?" }
+  ]);
+  const [showCallToast, setShowCallToast] = useState(false);
 
   const filteredData = bookings.filter((booking) =>
     booking.pnr.includes(filterText) ||
     booking.trainName.toLowerCase().includes(filterText.toLowerCase()) ||
     booking.trainNo.includes(filterText)
   );
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput.trim();
+    setChatMessages((prev) => [...prev, { sender: "user", text: userText }]);
+    setChatInput("");
+
+    setTimeout(() => {
+      let reply = "Thank you for reaching out! A travel specialist is reviewing your request.";
+      if (userText.toLowerCase().includes("cancel") || userText.toLowerCase().includes("refund")) {
+        reply = "For ticket cancellations and instant refunds, you can initiate cancellation directly under your Booking Details or call 139.";
+      } else if (userText.toLowerCase().includes("seat") || userText.toLowerCase().includes("upgrade")) {
+        reply = "Seat upgrades are subject to chart preparation 4 hours before departure.";
+      }
+      setChatMessages((prev) => [...prev, { sender: "agent", text: reply }]);
+    }, 800);
+  };
+
+  const handleCallTollFree = () => {
+    setShowCallToast(true);
+    window.location.href = "tel:139";
+    setTimeout(() => setShowCallToast(false), 5000);
+  };
 
   return (
     <div className="space-y-6">
@@ -155,11 +189,21 @@ export function BookingHistory({ bookings }: BookingHistoryProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-              <MessageSquare className="w-3.5 h-3.5" />
+            <Button
+              onClick={() => setIsChatOpen(true)}
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs bg-white dark:bg-slate-900 hover:bg-slate-50"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#c05621]" />
               Chat Support
             </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs text-[#c05621] border-amber-200 hover:bg-amber-50/50">
+            <Button
+              onClick={handleCallTollFree}
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs text-[#c05621] border-amber-200 hover:bg-amber-50/50"
+            >
               <PhoneCall className="w-3.5 h-3.5" />
               Call Toll-Free
             </Button>
@@ -178,17 +222,197 @@ export function BookingHistory({ bookings }: BookingHistoryProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+            <Button
+              onClick={() => {
+                if (bookings.length === 0) return;
+                const printWindow = window.open("", "_blank");
+                if (!printWindow) return;
+                
+                const bookingsHtml = bookings
+                  .map(
+                    (b) => `
+                  <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-family: monospace;">${b.pnr}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${b.date}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><b>${b.trainName}</b> (#${b.trainNo})</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${b.statusText}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${b.fare}</td>
+                  </tr>
+                `
+                  )
+                  .join("");
+
+                printWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>ixigo PNR - Travel History Statement</title>
+                      <style>
+                        body { font-family: system-ui, -apple-system, sans-serif; color: #333; padding: 40px; }
+                        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #c05621; padding-bottom: 20px; margin-bottom: 30px; }
+                        .logo { font-size: 24px; font-weight: bold; color: #c05621; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th { background-color: #faf8f5; text-align: left; padding: 12px 10px; border-bottom: 2px solid #ddd; font-size: 12px; text-transform: uppercase; color: #666; }
+                        .footer { margin-top: 50px; font-size: 11px; text-align: center; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header">
+                        <div>
+                          <div class="logo">ixigo PNR Tracker</div>
+                          <div style="font-size: 12px; margin-top: 5px; color: #666;">Premium Member Travel Statement</div>
+                        </div>
+                        <div style="text-align: right; font-size: 12px; color: #666;">
+                          <div>Date Generated: ${new Date().toLocaleDateString("en-GB")}</div>
+                          <div>Total Bookings: ${bookings.length}</div>
+                        </div>
+                      </div>
+                      <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Travel History Statement</h2>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>PNR Number</th>
+                            <th>Travel Date</th>
+                            <th>Train Details</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Fare</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${bookingsHtml}
+                        </tbody>
+                      </table>
+                      <div class="footer">
+                        This is an automatically generated travel statement from your ixigo PNR Tracker portal.
+                      </div>
+                      <script>
+                        window.onload = function() {
+                          window.print();
+                          window.close();
+                        };
+                      </script>
+                    </body>
+                  </html>
+                `);
+                printWindow.document.close();
+              }}
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={bookings.length === 0}
+            >
               <Download className="w-3.5 h-3.5" />
               PDF Statement
             </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+            <Button
+              onClick={() => {
+                if (bookings.length === 0) return;
+                const headers = ["PNR Number", "Travel Date", "Train Name", "Train No", "Status", "Fare"];
+                const rows = bookings.map((b) => [
+                  b.pnr,
+                  b.date,
+                  b.trainName,
+                  b.trainNo,
+                  b.statusText,
+                  b.fare,
+                ]);
+                const csvContent =
+                  "data:text/csv;charset=utf-8," +
+                  [headers.join(","), ...rows.map((e) => e.map(val => `"${val}"`).join(","))].join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `ixigo_pnr_bookings_${Date.now()}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={bookings.length === 0}
+            >
               <Download className="w-3.5 h-3.5" />
               Export Excel
             </Button>
           </div>
         </Card>
       </div>
+
+      {/* Toll-Free Call Toast Banner */}
+      {showCallToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#c05621] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+          <PhoneCall className="w-5 h-5 text-amber-200 animate-pulse" />
+          <div>
+            <p className="text-xs font-bold">Dialing Railway Toll-Free Helpline...</p>
+            <p className="text-[11px] text-amber-100 font-mono">1800-111-139 / 139</p>
+          </div>
+          <button onClick={() => setShowCallToast(false)} className="ml-2 hover:bg-white/20 p-1 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 24/7 Chat Support Modal */}
+      {isChatOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-[#eaddcd] dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col h-[500px] animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="bg-[#FAF7F2] dark:bg-slate-950 p-4 border-b border-[#eaddcd] dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#c05621] text-white flex items-center justify-center font-bold text-sm">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">24/7 Railway Support</h3>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Agent Online
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsChatOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#FAF8F5]/50 dark:bg-slate-950/30">
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
+                      msg.sender === "user"
+                        ? "bg-[#c05621] text-white rounded-br-none"
+                        : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 rounded-bl-none shadow-sm"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Chat Input */}
+            <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+              <Input
+                type="text"
+                placeholder="Ask about seat upgrades, cancellations..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                className="h-10 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-amber-500/30"
+              />
+              <Button type="submit" size="sm" className="h-10 px-3.5 bg-[#c05621] hover:bg-[#a8481b] text-white rounded-xl">
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

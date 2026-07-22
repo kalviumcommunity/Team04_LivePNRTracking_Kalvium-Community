@@ -49,7 +49,7 @@ interface PnrTrackerProps {
 }
 
 export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
-  const [pnrInput, setPnrInput] = useState(initialPnr || "4109857123");
+  const [pnrInput, setPnrInput] = useState(initialPnr || "");
   const [activePnr, setActivePnr] = useState<PnrDetails | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,6 +60,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
 
   // Core API Fetch Function
   const fetchLivePnr = useCallback(async (pnrNumber: string, isAutoPoll = false) => {
+    if (!pnrNumber) return;
     if (!isAutoPoll) setLoading(true);
     else setIsRefreshing(true);
     setError("");
@@ -83,10 +84,12 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
     }
   }, []);
 
-  // Initial lookup or prop change handling
+  // Initial lookup handling
   useEffect(() => {
-    const targetPnr = initialPnr || "4109857123";
-    Promise.resolve().then(() => fetchLivePnr(targetPnr));
+    if (initialPnr) {
+      setPnrInput(initialPnr);
+      Promise.resolve().then(() => fetchLivePnr(initialPnr));
+    }
   }, [initialPnr, fetchLivePnr]);
 
   // 30-Second Auto-Polling Effect
@@ -341,6 +344,27 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Initial Empty State Prompt */}
+      {!activePnr && !loading && !error && (
+        <Card className="border border-dashed border-[#e2d5c3] dark:border-slate-800 bg-[#faf8f5]/50 dark:bg-slate-900/30 p-8 text-center rounded-2xl">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-[#c05621] flex items-center justify-center mb-3">
+            <Train className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Track Live PNR Status</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+            Enter any 10-digit IRCTC PNR number in the search box above to view real-time train status, platform, delay info, and passenger berths.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <span className="text-[11px] font-mono text-slate-500 bg-white dark:bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800">
+              Sample PNR: 4109857123
+            </span>
+            <span className="text-[11px] font-mono text-slate-500 bg-white dark:bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800">
+              Sample PNR: 1234567890
+            </span>
+          </div>
+        </Card>
       )}
     </div>
   );
