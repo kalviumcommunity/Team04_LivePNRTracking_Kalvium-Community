@@ -20,8 +20,14 @@ async function getAuthenticatedUser() {
   return user;
 }
 
-// 1. Update Profile (Name & Email)
-export async function updateProfile(data: { name: string; email: string }) {
+// 1. Update Profile (Name, Email, Username, Phone, Bio)
+export async function updateProfile(data: {
+  name: string;
+  email: string;
+  username?: string | null;
+  phone?: string | null;
+  bio?: string | null;
+}) {
   try {
     const user = await getAuthenticatedUser();
 
@@ -40,6 +46,9 @@ export async function updateProfile(data: { name: string; email: string }) {
       data: {
         name: data.name,
         email: data.email,
+        username: data.username,
+        phone: data.phone,
+        bio: data.bio,
       },
     });
 
@@ -47,7 +56,7 @@ export async function updateProfile(data: { name: string; email: string }) {
     await db.auditLog.create({
       data: {
         action: "UPDATE_PROFILE",
-        details: `Updated name to "${data.name}" and email to "${data.email}"`,
+        details: `Updated profile details: name="${data.name}", email="${data.email}", username="${data.username || ''}"`,
         userId: user.id,
       },
     });
@@ -116,5 +125,24 @@ export async function deleteAccount() {
   } catch (error: unknown) {
     console.error("[DELETE_ACCOUNT]", error);
     return { error: (error as Error).message || "Failed to delete account." };
+  }
+}
+
+// 4. Get Profile Details
+export async function getProfile() {
+  try {
+    const user = await getAuthenticatedUser();
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      phone: user.phone,
+      bio: user.bio,
+      role: user.role,
+    };
+  } catch (error) {
+    console.error("[GET_PROFILE]", error);
+    return null;
   }
 }

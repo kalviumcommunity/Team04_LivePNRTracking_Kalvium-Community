@@ -28,6 +28,7 @@ import { DashboardOverview } from "./dashboard-overview";
 import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite } from "@/actions/passenger";
 import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus } from "@/actions/admin";
 import { updatePassengerBoarding } from "@/actions/staff";
+import { getProfile } from "@/actions/settings";
 
 interface DashboardClientProps {
   session: {
@@ -57,13 +58,20 @@ export function DashboardClient({ session }: DashboardClientProps) {
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const userName = session?.user?.name || "Demo User";
-  const userEmail = session?.user?.email || "demo@railwaypnr.com";
+  const [profileName, setProfileName] = useState(session?.user?.name || "Demo User");
+  const [profileEmail, setProfileEmail] = useState(session?.user?.email || "demo@railwaypnr.com");
 
   // Data Loading Trigger
   const loadPortalData = async () => {
     setLoading(true);
     try {
+      // Sync user profile info from DB
+      const profile = await getProfile();
+      if (profile) {
+        setProfileName(profile.name || "Demo User");
+        setProfileEmail(profile.email || "demo@railwaypnr.com");
+      }
+
       if (userRole === "passenger") {
         const userBookings = await getBookings();
         setBookings(userBookings);
@@ -224,8 +232,8 @@ export function DashboardClient({ session }: DashboardClientProps) {
               <User className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="font-bold text-slate-850 dark:text-slate-100 block text-xs truncate">{userName}</span>
-              <span className="text-[9px] text-slate-400 block truncate">{userEmail}</span>
+              <span className="font-bold text-slate-850 dark:text-slate-100 block text-xs truncate">{profileName}</span>
+              <span className="text-[9px] text-slate-400 block truncate">{profileEmail}</span>
               <span className="text-[8px] text-amber-700 dark:text-amber-500 font-bold block uppercase tracking-wider mt-0.5">
                 {userRole === "admin" 
                   ? "System Administrator" 
@@ -264,7 +272,17 @@ export function DashboardClient({ session }: DashboardClientProps) {
 
         {/* Footer actions */}
         <div className="space-y-1.5 border-t border-[#f2eae1] dark:border-slate-800 pt-4">
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100/50">
+          <button
+            onClick={() => {
+              setActiveTab("settings");
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
+              activeTab === "settings"
+                ? "bg-[#c05621] text-white shadow-sm shadow-[#c05621]/15"
+                : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/50"
+            }`}
+          >
             <Settings className="w-4 h-4" />
             Settings
           </button>
@@ -303,14 +321,20 @@ export function DashboardClient({ session }: DashboardClientProps) {
               </div>
             </div>
           ) : activeTab === "settings" ? (
-            <SettingsPortal user={session?.user} />
+            <SettingsPortal
+              user={session?.user}
+              onProfileUpdate={(name, email) => {
+                setProfileName(name);
+                setProfileEmail(email);
+              }}
+            />
           ) : (
             <>
           {userRole === "passenger" && (
             <>
               {activeTab === "overview" && (
                 <DashboardOverview
-                  userName={userName}
+                  userName={profileName}
                   userRole={userRole}
                   bookings={bookings}
                   favorites={favorites}

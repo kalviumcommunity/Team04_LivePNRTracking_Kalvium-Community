@@ -1,7 +1,9 @@
 "use client";
 // Settings & Security Portal Component
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
+import { getProfile, updateProfile, changePassword, deleteAccount } from "@/actions/settings";
 import {
   User,
   Shield,
@@ -36,6 +38,7 @@ interface SettingsPortalProps {
     email?: string | null;
     role?: string | null;
   } | null;
+  onProfileUpdate?: (name: string, email: string) => void;
 }
 
 type TabType = "account" | "security" | "preferences" | "notifications" | "developer" | "privacy";
@@ -66,16 +69,44 @@ interface AuditLogItem {
   status: "Success" | "Warning" | "Failed";
 }
 
-export function SettingsPortal({ user }: SettingsPortalProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("security");
+export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
+  const [activeTab, setActiveTab] = useState<TabType>("account");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // --- Profile State ---
-  const [name, setName] = useState(user?.name || "Akhilan TS");
-  const [username, setUsername] = useState("akhilants134");
-  const [email, setEmail] = useState(user?.email || "akhilants134@gmail.com");
-  const [phone, setPhone] = useState("+91 98765 43210");
-  const [bio, setBio] = useState("Railway enthusiast & software engineer.");
+  const [name, setName] = useState(user?.name || "");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+
+  // --- Load Profile Details from DB ---
+  useEffect(() => {
+    async function loadProfile() {
+      const profile = await getProfile();
+      if (profile) {
+        setName(profile.name || "");
+        setEmail(profile.email || "");
+        setUsername(profile.username || "");
+        setPhone(profile.phone || "");
+        setBio(profile.bio || "");
+      }
+    }
+    loadProfile();
+  }, []);
+
+  // --- Save Profile Changes ---
+  const handleSaveChanges = async () => {
+    const res = await updateProfile({ name, email, username, phone, bio });
+    if (res.error) {
+      showToast(res.error);
+    } else if (res.success) {
+      showToast(res.success);
+      if (onProfileUpdate) {
+        onProfileUpdate(name, email);
+      }
+    }
+  };
 
   // --- Security State ---
   const [currentPassword, setCurrentPassword] = useState("");
@@ -106,9 +137,79 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
   const [language, setLanguage] = useState("English (US)");
   const [timezone, setTimezone] = useState("Asia/Kolkata (IST +5:30)");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("pref-reduced-motion") === "true";
+    }
+    return false;
+  });
+  const [highContrast, setHighContrast] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("pref-high-contrast") === "true";
+    }
+    return false;
+  });
   const [fontSize, setFontSize] = useState("medium");
+
+  // --- Reduced Motion Effect ---
+  useEffect(() => {
+    localStorage.setItem("pref-reduced-motion", String(reducedMotion));
+    let styleEl = document.getElementById("reduced-motion-style");
+    if (reducedMotion) {
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = "reduced-motion-style";
+        styleEl.innerHTML = `
+          *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            animation-delay: 0s !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
+            transition-delay: 0s !important;
+            scroll-behavior: auto !important;
+          }
+        `;
+        document.head.appendChild(styleEl);
+      }
+    } else {
+      if (styleEl) {
+        styleEl.remove();
+      }
+    }
+  }, [reducedMotion]);
+
+  // --- High Contrast Effect ---
+  useEffect(() => {
+    localStorage.setItem("pref-high-contrast", String(highContrast));
+    if (highContrast) {
+      document.documentElement.classList.add("high-contrast-mode");
+      let contrastStyleEl = document.getElementById("high-contrast-style");
+      if (!contrastStyleEl) {
+        contrastStyleEl = document.createElement("style");
+        contrastStyleEl.id = "high-contrast-style";
+        contrastStyleEl.innerHTML = `
+          .high-contrast-mode {
+            filter: contrast(1.3) saturate(1.1) !important;
+          }
+          .high-contrast-mode input, .high-contrast-mode select, .high-contrast-mode textarea {
+            border-color: #000000 !important;
+            border-width: 1.5px !important;
+          }
+          .dark .high-contrast-mode input, .dark .high-contrast-mode select, .dark .high-contrast-mode textarea {
+            border-color: #ffffff !important;
+            border-width: 1.5px !important;
+          }
+        `;
+        document.head.appendChild(contrastStyleEl);
+      }
+    } else {
+      document.documentElement.classList.remove("high-contrast-mode");
+      const contrastStyleEl = document.getElementById("high-contrast-style");
+      if (contrastStyleEl) {
+        contrastStyleEl.remove();
+      }
+    }
+  }, [highContrast]);
 
   // --- Notifications State ---
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -147,7 +248,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword) {
       showToast("Please enter your current password.");
@@ -161,10 +262,15 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
       showToast("New passwords do not match.");
       return;
     }
-    showToast("Password updated successfully!");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    const res = await changePassword({ current: currentPassword, newPass: newPassword });
+    if (res.error) {
+      showToast(res.error);
+    } else if (res.success) {
+      showToast(res.success);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
   };
 
   const handleRevokeSession = (id: string) => {
@@ -270,7 +376,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => showToast("All settings saved and synchronized with server.")}
+            onClick={handleSaveChanges}
             className="px-4 py-2 bg-[#c05621] hover:bg-[#a8481b] text-white text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2"
           >
             <Check className="w-4 h-4" />
@@ -405,13 +511,31 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                 </p>
                 <div className="flex items-center gap-3 mt-3">
                   <button
-                    onClick={() => showToast("Account deactivation requested. Confirmation email sent.")}
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to deactivate your account?")) {
+                        const res = await deleteAccount();
+                        if (res.success) {
+                          await signOut({ callbackUrl: "/login" });
+                        } else {
+                          showToast(res.error || "Failed to deactivate account.");
+                        }
+                      }
+                    }}
                     className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/50 dark:hover:bg-red-900/60 dark:text-red-300 text-xs font-semibold rounded-lg transition-all"
                   >
                     Deactivate Account
                   </button>
                   <button
-                    onClick={() => showToast("Data deletion modal initialized.")}
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to permanently delete your account data? This is irreversible.")) {
+                        const res = await deleteAccount();
+                        if (res.success) {
+                          await signOut({ callbackUrl: "/login" });
+                        } else {
+                          showToast(res.error || "Failed to delete account data.");
+                        }
+                      }
+                    }}
                     className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-all"
                   >
                     Delete Account Data

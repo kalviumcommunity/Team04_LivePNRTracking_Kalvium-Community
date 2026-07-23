@@ -1,5 +1,6 @@
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -10,10 +11,15 @@ model User {
   id            String          @id @default(cuid())
   name          String?
   email         String?         @unique
+  username      String?
+  phone         String?
+  bio           String?
   emailVerified DateTime?
   image         String?
   password      String?
   role          String          @default("passenger")
+  active        Boolean         @default(true)
+  station       String?
   accounts      Account[]
   sessions      Session[]
   favorites     FavoritePNR[]
@@ -31,12 +37,12 @@ model Account {
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
+  refresh_token      String?
+  access_token       String?
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String? @db.Text
+  id_token           String?
   session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -86,6 +92,8 @@ model Booking {
   fromStation    String
   toStation      String
   status         String
+  boardingStatus String   @default("Boarding")
+  seat           String?
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())
