@@ -1,21 +1,8 @@
 import "dotenv/config";
-process.env.PRISMA_CLIENT_ENGINE_TYPE = "library";
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 
-const connectionString = process.env.DATABASE_URL || "";
-const isPostgres = connectionString.startsWith("postgresql://") || connectionString.startsWith("postgres://");
-
-let prisma: PrismaClient;
-if (isPostgres) {
-  const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
-  prisma = new PrismaClient({ adapter });
-} else {
-  prisma = new PrismaClient();
-}
+const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding database started...");

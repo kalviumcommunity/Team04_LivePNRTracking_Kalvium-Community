@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ManifestPassenger } from "./staff-portal";
+import { useTranslation } from "@/lib/i18n";
 
 export interface StaffMember {
   id: string;
@@ -26,6 +27,7 @@ interface AdminPortalProps {
 }
 
 export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus, activeSubTab, onSubTabChange }: AdminPortalProps) {
+  const { t } = useTranslation();
 
   // Form states
   const [newStaffName, setNewStaffName] = useState("");
@@ -60,7 +62,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
               : "border-transparent text-slate-400 hover:text-slate-700"
             }`}
         >
-          System Overview
+          {t("systemOverview")}
         </button>
         <button
           onClick={() => onSubTabChange("staff")}
@@ -69,7 +71,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
               : "border-transparent text-slate-400 hover:text-slate-700"
             }`}
         >
-          Manage Staff
+          {t("manageStaff")}
         </button>
         <button
           onClick={() => onSubTabChange("passengers")}
@@ -78,7 +80,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
               : "border-transparent text-slate-400 hover:text-slate-700"
             }`}
         >
-          Manage Passengers
+          {t("managePassengers")}
         </button>
       </div>
 
@@ -88,7 +90,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 p-4 flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-500 font-medium">Total Staff</span>
+                <span className="text-xs text-slate-500 font-medium">{t("totalStaff")}</span>
                 <span className="text-2xl font-extrabold text-slate-800 block mt-1">{staff.length}</span>
               </div>
               <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-[#c05621] border border-amber-200">
@@ -98,7 +100,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
 
             <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 p-4 flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-500 font-medium">Passengers Monitored</span>
+                <span className="text-xs text-slate-500 font-medium">{t("passengersMonitored")}</span>
                 <span className="text-2xl font-extrabold text-slate-800 block mt-1">{passengers.length}</span>
               </div>
               <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-200">
@@ -108,7 +110,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
 
             <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 p-4 flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-500 font-medium">API System Status</span>
+                <span className="text-xs text-slate-500 font-medium">{t("apiSystemStatus")}</span>
                 <span className="text-2xl font-extrabold text-emerald-600 block mt-1">99.98%</span>
               </div>
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-200">
@@ -118,8 +120,8 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
 
             <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 p-4 flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-500 font-medium">Diagnostics</span>
-                <span className="text-2xl font-extrabold text-slate-850 block mt-1">Healthy</span>
+                <span className="text-xs text-slate-500 font-medium">{t("diagnostics")}</span>
+                <span className="text-2xl font-extrabold text-slate-850 block mt-1">{t("healthy")}</span>
               </div>
               <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-200">
                 <Activity className="w-5 h-5" />
@@ -132,10 +134,10 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2 text-[#c05621]">
                 <ShieldCheck className="w-5 h-5" />
-                Administrative Platform Control
+                {t("adminControlTitle")}
               </CardTitle>
               <CardDescription className="text-xs">
-                System Overview and status metrics for all active railway corridors and databases.
+                {t("adminControlDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-xs text-slate-600">
@@ -144,12 +146,12 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
               </p>
               <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
                 <div>
-                  <span className="font-bold text-slate-800 block mb-1">Server Cluster</span>
+                  <span className="font-bold text-slate-800 block mb-1">{t("serverCluster")}</span>
                   <span className="text-slate-500">Node-A: Operational (17ms lat)</span>
                   <span className="text-slate-500 block">Node-B: Operational (22ms lat)</span>
                 </div>
                 <div>
-                  <span className="font-bold text-slate-800 block mb-1">Corridor Sync status</span>
+                  <span className="font-bold text-slate-800 block mb-1">{t("corridorSync")}</span>
                   <span className="text-slate-500">Northern Railway: Synced</span>
                   <span className="text-slate-500 block">Eastern Railway: Synced</span>
                 </div>
@@ -167,7 +169,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
               <CardHeader>
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <UserPlus className="w-4 h-4 text-[#c05621]" />
-                  Add New Staff
+                  {t("addNewStaff")}
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Create a new duty staff account.
@@ -176,7 +178,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
               <CardContent>
                 <form onSubmit={handleAddStaffSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="staff-name" className="text-[10px] font-bold text-slate-500 uppercase">Staff Name</label>
+                    <label htmlFor="staff-name" className="text-[10px] font-bold text-slate-500 uppercase">{t("staffName")}</label>
                     <Input
                       id="staff-name"
                       value={newStaffName}
@@ -186,7 +188,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="staff-email" className="text-[10px] font-bold text-slate-500 uppercase">Email Address</label>
+                    <label htmlFor="staff-email" className="text-[10px] font-bold text-slate-500 uppercase">{t("email")}</label>
                     <Input
                       id="staff-email"
                       type="email"
@@ -197,7 +199,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="staff-station" className="text-[10px] font-bold text-slate-500 uppercase">Assigned Station</label>
+                    <label htmlFor="staff-station" className="text-[10px] font-bold text-slate-500 uppercase">{t("assignedStation")}</label>
                     <select
                       id="staff-station"
                       value={newStaffStation}
@@ -211,7 +213,7 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
                   </div>
 
                   <Button type="submit" className="w-full bg-[#c05621] hover:bg-[#a64819] text-white text-xs h-9 font-semibold shadow-md shadow-[#c05621]/10">
-                    Add Staff Member
+                    {t("addStaffBtn")}
                   </Button>
 
                   {addSuccess && (
@@ -231,10 +233,10 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#fcfbf9]/60 border-b border-[#f2eae1] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      <th className="px-6 py-4">Name</th>
-                      <th className="px-6 py-4">Station</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
+                      <th className="px-6 py-4">{t("staffName")}</th>
+                      <th className="px-6 py-4">{t("stationLocation")}</th>
+                      <th className="px-6 py-4">{t("currentStatus")}</th>
+                      <th className="px-6 py-4 text-right">{t("actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f2eae1] text-sm text-slate-700">
@@ -286,11 +288,11 @@ export function AdminPortal({ staff, passengers, onAddStaff, onToggleStaffStatus
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#fcfbf9]/60 border-b border-[#f2eae1] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="px-6 py-4">Passenger Name</th>
+                  <th className="px-6 py-4">{t("passengerName")}</th>
                   <th className="px-6 py-4">PNR</th>
-                  <th className="px-6 py-4">Route Info</th>
-                  <th className="px-6 py-4">Seat</th>
-                  <th className="px-6 py-4 text-right">Status</th>
+                  <th className="px-6 py-4">{t("routeInfo")}</th>
+                  <th className="px-6 py-4">{t("seat")}</th>
+                  <th className="px-6 py-4 text-right">{t("currentStatus")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f2eae1] text-sm text-slate-700">

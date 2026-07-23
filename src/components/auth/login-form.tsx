@@ -19,8 +19,10 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, HelpCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
@@ -77,10 +79,10 @@ export function LoginForm() {
     <Card className="w-full max-w-md border border-white/10 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl shadow-2xl transition-all duration-300">
       <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Welcome back
+          {t("loginWelcomeBack")}
         </CardTitle>
         <CardDescription className="text-slate-500 dark:text-slate-400">
-          Enter your email and password to access your dashboard
+          {t("loginSubtitle")}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -88,7 +90,7 @@ export function LoginForm() {
           {/* Email Input */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-700 dark:text-slate-300 text-sm font-medium">
-              Email Address
+              {t("loginEmailLabel")}
             </Label>
             <div className="relative">
               <Input
@@ -114,13 +116,13 @@ export function LoginForm() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 text-sm font-medium">
-                Password
+                {t("loginPasswordLabel")}
               </Label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-[#c05621] dark:text-orange-400 hover:underline hover:text-[#a64819]"
               >
-                Forgot password?
+                {t("loginForgotPassword")}
               </Link>
             </div>
             <div className="relative">
@@ -176,10 +178,10 @@ export function LoginForm() {
             {isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Signing in...
+                {t("loginSigningIn")}
               </>
             ) : (
-              "Sign in"
+              t("loginSignIn")
             )}
           </Button>
 
@@ -188,7 +190,7 @@ export function LoginForm() {
               <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
             </div>
             <span className="relative bg-white dark:bg-slate-950 px-2.5 text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-              Or continue with
+              {t("loginOrContinueWith")}
             </span>
           </div>
 
@@ -230,7 +232,7 @@ export function LoginForm() {
             <div className="flex gap-2">
               <HelpCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-650" />
               <div className="space-y-1">
-                <span className="font-semibold block">Demo Account Details</span>
+                <span className="font-semibold block">{t("loginDemoAccount")}</span>
                 <p>Email: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">demo@railwaypnr.com</code></p>
                 <p>Password: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">password123</code></p>
               </div>
@@ -242,14 +244,14 @@ export function LoginForm() {
               onClick={handleAutofill}
               className="text-xs h-7 px-2 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400"
             >
-              Autofill
+              {t("loginAutofill")}
             </Button>
           </div>
           
           <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-            Don&apos;t have an account?{" "}
+            {t("loginDontHaveAccount")}{" "}
             <Link href="/register" className="text-[#c05621] dark:text-orange-400 font-bold hover:underline">
-              Sign up
+              {t("loginSignUp")}
             </Link>
           </p>
         </CardFooter>

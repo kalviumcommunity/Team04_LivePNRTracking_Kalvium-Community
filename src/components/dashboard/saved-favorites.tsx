@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
+import { getPnrMetadata } from "@/lib/pnr-utils";
+import { useTranslation } from "@/lib/i18n";
+
 interface BookingRecord {
   pnr: string;
   date: string;
@@ -45,6 +48,7 @@ export function SavedFavorites({
   onCheckStatus, 
   onBookTicket 
 }: SavedFavoritesProps) {
+  const { t } = useTranslation();
   const [bookingIndex, setBookingIndex] = useState<number | null>(null);
   const [passengerName, setPassengerName] = useState("Ramesh Rathore");
   const [travelClass, setTravelClass] = useState("AC 3 Tier (3A)");
@@ -55,18 +59,20 @@ export function SavedFavorites({
   const [newLabel, setNewLabel] = useState("");
   const [formError, setFormError] = useState("");
 
-  // Map database favorites to UI layout details
+  // Map database favorites to exact UI details using metadata helper
   const routes = favorites.map((fav) => {
     const booking = bookings.find((b) => b.pnr === fav.pnr);
+    const meta = getPnrMetadata(fav.pnr, fav.label, booking);
+
     return {
       id: fav.id,
       pnr: fav.pnr,
-      trainName: booking ? booking.trainName : "Express Special",
-      trainNo: booking ? booking.trainNo : "12000",
-      from: booking?.fromStation ?? "New Delhi",
-      fromCode: booking?.fromStation ?? "NDLS",
-      to: booking?.toStation ?? "Mumbai Central",
-      toCode: booking?.toStation ?? "MMCT",
+      trainName: meta.trainName,
+      trainNo: meta.trainNo,
+      from: meta.from,
+      fromCode: meta.fromCode,
+      to: meta.to,
+      toCode: meta.toCode,
       schedule: "Daily Runs",
       duration: "4h 45m",
       label: fav.label || "Pinned Route",
@@ -112,8 +118,8 @@ export function SavedFavorites({
     <div className="space-y-6">
       {/* Top Banner section */}
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Saved Favorites</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Manage your frequent routes and monitor live PNR status in one tap.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{t("savedFavorites")}</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t("savedFavoritesSub")}</p>
       </div>
 
       {/* Grid of Favorite Cards + Add New Button */}
@@ -125,7 +131,7 @@ export function SavedFavorites({
               <CardHeader className="pb-3 border-b border-[#f2eae1] dark:border-slate-800/50">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">Favorite Route</span>
+                    <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">{t("favoriteRoute")}</span>
                     <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100">{route.trainName}</CardTitle>
                     <CardDescription className="text-xs">PNR: {route.pnr} • #{route.trainNo}</CardDescription>
                   </div>
@@ -133,7 +139,7 @@ export function SavedFavorites({
                     <button 
                       onClick={() => onDeleteFavorite(route.id)}
                       className="p-1.5 rounded-full hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors"
-                      title="Remove Favorite"
+                      title={t("removeFavorite")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -149,17 +155,17 @@ export function SavedFavorites({
                   <div className="space-y-3 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
                       <div>
-                        <label htmlFor={`passenger-${index}`} className="text-[9px] font-bold text-slate-500 uppercase">Passenger Name</label>
+                        <label htmlFor={`passenger-${index}`} className="text-[9px] font-bold text-slate-500 uppercase">{t("passengerNameLabel")}</label>
                         <Input
                           id={`passenger-${index}`}
                           value={passengerName}
                           onChange={(e) => setPassengerName(e.target.value)}
-                          placeholder="Passenger Name"
+                          placeholder={t("passengerNameLabel")}
                           className="h-8 text-xs bg-white mt-0.5"
                         />
                       </div>
                       <div>
-                        <label htmlFor={`class-${index}`} className="text-[9px] font-bold text-slate-500 uppercase">Travel Class</label>
+                        <label htmlFor={`class-${index}`} className="text-[9px] font-bold text-slate-500 uppercase">{t("travelClass")}</label>
                         <select
                           id={`class-${index}`}
                           value={travelClass}
@@ -179,14 +185,14 @@ export function SavedFavorites({
                         size="sm"
                         className="flex-1 text-xs h-8"
                       >
-                        Cancel
+                        {t("cancelBtn")}
                       </Button>
                       <Button
                         onClick={() => handleBookSubmit(route)}
                         size="sm"
                         className="flex-1 text-xs h-8 bg-[#c05621] hover:bg-[#a64819] text-white"
                       >
-                        Confirm
+                        {t("confirmBtn")}
                       </Button>
                     </div>
                   </div>
@@ -227,7 +233,7 @@ export function SavedFavorites({
                         variant="outline"
                         className="flex-1 border-[#c05621] text-[#c05621] hover:bg-amber-50/50 text-xs font-semibold h-9"
                       >
-                        PNR Status
+                        {t("pnrStatus")}
                       </Button>
                       <Button
                         onClick={() => {
@@ -237,7 +243,7 @@ export function SavedFavorites({
                         className="flex-1 bg-[#c05621] hover:bg-[#a64819] text-white text-xs font-semibold h-9"
                       >
                         <Ticket className="w-3.5 h-3.5 mr-1" />
-                        Book Ticket
+                        {t("bookTicket")}
                       </Button>
                     </div>
                   </div>
@@ -252,9 +258,9 @@ export function SavedFavorites({
           <Card className="border border-amber-300 dark:border-slate-800 bg-white/90 p-5 flex flex-col justify-between min-h-[260px]">
             <form onSubmit={handleAddSubmit} className="space-y-3 flex-1 flex flex-col justify-between">
               <div className="space-y-2">
-                <span className="text-[10px] uppercase font-bold text-amber-700 block">Pin New Route</span>
+                <span className="text-[10px] uppercase font-bold text-amber-700 block">{t("pinNewRouteLabel")}</span>
                 <div>
-                  <label htmlFor="fav-pnr" className="text-[9px] font-bold text-slate-500 uppercase">10-Digit PNR</label>
+                  <label htmlFor="fav-pnr" className="text-[9px] font-bold text-slate-500 uppercase">{t("tenDigitPnr")}</label>
                   <Input
                     id="fav-pnr"
                     value={newPnr}
@@ -265,7 +271,7 @@ export function SavedFavorites({
                   />
                 </div>
                 <div>
-                  <label htmlFor="fav-label" className="text-[9px] font-bold text-slate-500 uppercase">Custom Label</label>
+                  <label htmlFor="fav-label" className="text-[9px] font-bold text-slate-500 uppercase">{t("customLabel")}</label>
                   <Input
                     id="fav-label"
                     value={newLabel}
@@ -279,25 +285,25 @@ export function SavedFavorites({
                 )}
               </div>
               <div className="flex gap-2 pt-2">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setIsAdding(false);
-                    setFormError("");
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-xs h-8"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="flex-1 text-xs h-8 bg-[#c05621] hover:bg-[#a64819] text-white"
-                >
-                  Save Favorite
-                </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setIsAdding(false);
+                      setFormError("");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs h-8"
+                  >
+                    {t("cancelBtn")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="flex-1 text-xs h-8 bg-[#c05621] hover:bg-[#a64819] text-white"
+                  >
+                    {t("saveFavorite")}
+                  </Button>
               </div>
             </form>
           </Card>
@@ -309,9 +315,9 @@ export function SavedFavorites({
             <div className="p-3 rounded-full bg-amber-50 dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-[#c05621] mb-3">
               <Plus className="w-5 h-5" />
             </div>
-            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">Add New Favorite</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{t("addNewFavorite")}</span>
             <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[180px]">
-              Save a new PNR number or frequent train route for fast lookup.
+              {t("addNewFavoriteDesc")}
             </span>
           </Card>
         )}
@@ -320,10 +326,10 @@ export function SavedFavorites({
       {/* Recent Route Searches list */}
       <Card className="border border-[#eaddcd] dark:border-slate-800/80 bg-white/70 dark:bg-slate-950/40 backdrop-blur-xl shadow-md overflow-hidden">
         <CardHeader className="border-b border-[#f2eae1] dark:border-slate-800/50 p-4">
-          <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-amber-700 dark:text-amber-500" />
-            Recent Route Searches
-          </CardTitle>
+            <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-amber-700 dark:text-amber-500" />
+              {t("recentRouteSearches")}
+            </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-[#f2eae1] dark:divide-slate-800 text-xs text-slate-600 dark:text-slate-400">
@@ -333,12 +339,12 @@ export function SavedFavorites({
                 <span className="text-slate-300 mx-2">→</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">Mumbai (CSMT)</span>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-slate-400">Searched 4 hours ago</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 font-bold">
-                  Seats Available
-                </span>
-              </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-400">{t("searchedHoursAgo")}</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 font-bold">
+                    {t("seatsAvailable")}
+                  </span>
+                </div>
             </div>
             <div className="p-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-900/10">
               <div>
@@ -346,12 +352,12 @@ export function SavedFavorites({
                 <span className="text-slate-300 mx-2">→</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">Lucknow (LJN)</span>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-slate-400">Searched Yesterday</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200/50 font-bold">
-                  On Time
-                </span>
-              </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-400">{t("searchedYesterday")}</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200/50 font-bold">
+                    {t("onTimeLabel")}
+                  </span>
+                </div>
             </div>
           </div>
         </CardContent>
@@ -362,19 +368,19 @@ export function SavedFavorites({
         {/* Zero Cancellation Banner */}
         <div className="md:col-span-8 p-5 rounded-2xl bg-gradient-to-r from-amber-950 to-stone-900 text-amber-50 relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg border border-amber-900/10">
           <div className="absolute right-0 top-0 h-full w-1/3 bg-[radial-gradient(circle_at_right,rgba(245,158,11,0.1),transparent)] pointer-events-none" />
-          <div className="space-y-1.5 z-10">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              LiveRail Assured
-            </span>
-            <h3 className="text-lg font-bold">Zero Cancellation Fee</h3>
-            <p className="text-xs text-amber-200/80 leading-relaxed max-w-sm">
-              Get full refunds on train ticket cancellations. Upgrade for a worry-free booking experience in just one click.
-            </p>
-          </div>
-          <Button className="bg-[#c05621] hover:bg-[#a64819] text-white px-5 font-bold text-xs h-9 z-10 shrink-0">
-            Upgrade Now
-          </Button>
+            <div className="space-y-1.5 z-10">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {t("liveRailAssured")}
+              </span>
+              <h3 className="text-lg font-bold">{t("zeroCancellationTitle")}</h3>
+              <p className="text-xs text-amber-200/80 leading-relaxed max-w-sm">
+                {t("zeroCancellationDesc")}
+              </p>
+            </div>
+            <Button className="bg-[#c05621] hover:bg-[#a64819] text-white px-5 font-bold text-xs h-9 z-10 shrink-0">
+              {t("upgradeNow")}
+            </Button>
         </div>
 
         {/* Partner Offers */}
@@ -382,15 +388,15 @@ export function SavedFavorites({
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-500">
               <Tag className="w-3.5 h-3.5" />
-              Special Promo
+              {t("specialPromo")}
             </span>
-            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">Exclusive Partner Offers</h3>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">{t("exclusiveOffers")}</h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Save up to ₹500 on first-time bookings using partner credit cards.
+              {t("zeroCancellationDesc") || "Save up to ₹500 on first-time bookings using partner credit cards."}
             </p>
           </div>
           <Button variant="link" className="p-0 h-auto text-xs font-bold text-[#c05621] hover:text-[#a64819] justify-start flex items-center gap-1">
-            Check details <ArrowRight className="w-3.5 h-3.5" />
+            {t("checkDetails")} <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </Card>
       </div>

@@ -5,6 +5,7 @@ import { Search, FileText, Download, MessageSquare, PhoneCall, HelpCircle, X, Se
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n";
 
 export interface BookingRecord {
   pnr: string;
@@ -24,6 +25,7 @@ interface BookingHistoryProps {
 }
 
 export function BookingHistory({ bookings }: BookingHistoryProps) {
+  const { t } = useTranslation();
   const [filterText, setFilterText] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -67,39 +69,43 @@ export function BookingHistory({ bookings }: BookingHistoryProps) {
     <div className="space-y-6">
       {/* Top Banner section */}
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Booking History</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Manage your past and upcoming train journeys.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{t("bookingHistory")}</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t("bookingHistorySub")}</p>
       </div>
 
       {/* Quick Summary Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 dark:bg-slate-950/40 p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Bookings</span>
-            <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">45</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t("totalBookings")}</span>
+            <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">{bookings.length}</span>
           </div>
           <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-slate-950 border border-amber-200/50 dark:border-slate-800 flex items-center justify-center text-[#c05621] font-bold text-sm">
-            45
+            {bookings.length}
           </div>
         </Card>
 
         <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 dark:bg-slate-950/40 p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Active / Upcoming</span>
-            <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">3</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t("activeUpcoming")}</span>
+            <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">
+              {bookings.filter((b) => b.status === "CNF" || b.status === "WL").length}
+            </span>
           </div>
           <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-slate-950 border border-emerald-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-700 font-bold text-sm">
-            3
+            {bookings.filter((b) => b.status === "CNF" || b.status === "WL").length}
           </div>
         </Card>
 
         <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/60 dark:bg-slate-950/40 p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Cancelled Journeys</span>
-            <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">7</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t("cancelledJourneys")}</span>
+            <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-100 block mt-1">
+              {bookings.filter((b) => b.status === "CAN").length}
+            </span>
           </div>
-          <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-slate-950 border border-red-200/50 dark:border-slate-800 flex items-center justify-center text-red-700 font-bold text-sm">
-            7
+          <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-slate-950 border border-red-200/50 dark:border-slate-800 flex items-center justify-center text-red-600 font-bold text-sm">
+            {bookings.filter((b) => b.status === "CAN").length}
           </div>
         </Card>
       </div>
@@ -113,7 +119,7 @@ export function BookingHistory({ bookings }: BookingHistoryProps) {
             <Input
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              placeholder="Search PNR or Train..."
+              placeholder={t("quickFilterPlaceholder")}
               className="pl-9 h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 text-sm"
             />
           </div>
@@ -124,10 +130,10 @@ export function BookingHistory({ bookings }: BookingHistoryProps) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#fcfbf9]/60 dark:bg-slate-900/40 border-b border-[#f2eae1] dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                <th className="px-6 py-4">PNR Number</th>
-                <th className="px-6 py-4">Travel Date</th>
-                <th className="px-6 py-4">Train Details</th>
-                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">PNR</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4">Train</th>
+                <th className="px-6 py-4">{t("currentStatus")}</th>
                 <th className="px-6 py-4 text-right">Fare</th>
               </tr>
             </thead>

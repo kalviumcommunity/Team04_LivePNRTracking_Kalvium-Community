@@ -13,11 +13,14 @@ import {
   Check,
   Share2,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Star,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n";
 
 export interface Passenger {
   name: string;
@@ -46,9 +49,18 @@ export interface PnrDetails {
 
 interface PnrTrackerProps {
   initialPnr?: string | null;
+  favorites?: { id: string; pnr: string; label: string }[];
+  onAddFavorite?: (pnr: string, label?: string) => Promise<void>;
+  onRemoveFavorite?: (id: string) => Promise<void>;
 }
 
-export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
+export function PnrTracker({
+  initialPnr,
+  favorites = [],
+  onAddFavorite,
+  onRemoveFavorite,
+}: PnrTrackerProps = {}) {
+  const { t } = useTranslation();
   const [pnrInput, setPnrInput] = useState(initialPnr || "");
   const [activePnr, setActivePnr] = useState<PnrDetails | null>(null);
   const [error, setError] = useState("");
@@ -57,6 +69,40 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null);
+  const [favLoading, setFavLoading] = useState(false);
+
+  const existingFav = favorites.find((f) => f.pnr === activePnr?.pnr);
+  const isFavorite = !!existingFav;
+
+  const handleClearSearch = () => {
+    setPnrInput("");
+    setActivePnr(null);
+    setError("");
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!activePnr?.pnr) return;
+    setFavLoading(true);
+    try {
+      if (isFavorite && existingFav) {
+        if (onRemoveFavorite) {
+          await onRemoveFavorite(existingFav.id);
+        }
+      } else {
+        if (onAddFavorite) {
+          const encodedLabel = `${activePnr.trainName}|${activePnr.trainNo}|${activePnr.from}|${activePnr.fromCode}|${activePnr.to}|${activePnr.toCode}`;
+          await onAddFavorite(
+            activePnr.pnr,
+            encodedLabel
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   // Core API Fetch Function
   const fetchLivePnr = useCallback(async (pnrNumber: string, isAutoPoll = false) => {
@@ -109,6 +155,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
     const cleanedPnr = pnrInput.trim();
 
     if (!cleanedPnr) {
+      setActivePnr(null);
       setError("Please enter a 10-digit PNR number.");
       return;
     }
@@ -147,10 +194,10 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Train className="w-5 h-5 text-[#c05621]" />
-            Live PNR Tracker & Status
+            {t("livePnrTracker")}
           </CardTitle>
           <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
-            Real-time IRCTC PNR tracking with automated 30-second live status polling.
+            {t("realTimePnrDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -160,11 +207,28 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
               <Input
                 type="text"
                 maxLength={10}
-                placeholder="Enter 10-digit PNR Number (e.g. 4109857123)"
+                placeholder={t("searchPnrPlaceholder")}
                 value={pnrInput}
-                onChange={(e) => setPnrInput(e.target.value.replace(/\D/g, ""))}
-                className="pl-10 h-11 bg-white dark:bg-slate-950 border-[#e2d5c3] dark:border-slate-800 text-xs font-mono tracking-wider focus-visible:ring-amber-500/30 rounded-xl"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setPnrInput(val);
+                  if (!val) {
+                    setActivePnr(null);
+                    setError("");
+                  }
+                }}
+                className="pl-10 pr-10 h-11 bg-white dark:bg-slate-950 border-[#e2d5c3] dark:border-slate-800 text-xs font-mono tracking-wider focus-visible:ring-amber-500/30 rounded-xl"
               />
+              {pnrInput && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title={t("clearSearch")}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <Button
               type="submit"
@@ -174,10 +238,10 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
               {loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Fetching Live...
+                  {t("fetchingLive")}
                 </>
               ) : (
-                <>Get PNR Status</>
+                <>{t("getPnrStatus")}</>
               )}
             </Button>
           </form>
@@ -202,13 +266,13 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
-              <span className="font-bold">Live Auto-Polling Active</span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">(Refreshes every 30s)</span>
+              <span className="font-bold">{t("liveAutoPolling")}</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">{t("refreshesEvery30s")}</span>
             </div>
             <div className="flex items-center gap-3">
               {lastRefreshedAt && (
                 <span className="text-[10px] text-slate-500 flex items-center gap-1 font-mono">
-                  <Clock className="w-3 h-3" /> Updated: {lastRefreshedAt}
+                  <Clock className="w-3 h-3" /> {t("updated")}: {lastRefreshedAt}
                 </span>
               )}
               <Button
@@ -219,7 +283,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
                 className="h-7 text-[11px] px-2 text-[#c05621] hover:bg-amber-100/60 dark:hover:bg-slate-800"
               >
                 <RefreshCw className={`w-3.5 h-3.5 mr-1 ${isRefreshing ? "animate-spin" : ""}`} />
-                Refresh Now
+                {t("refreshNow")}
               </Button>
             </div>
           </div>
@@ -233,16 +297,35 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
                     PNR: {activePnr.pnr}
                   </span>
                   <button
+                    onClick={handleToggleFavorite}
+                    disabled={favLoading}
+                    className={`p-1 rounded-md transition-all flex items-center gap-1 text-xs font-semibold ${
+                      isFavorite
+                        ? "bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-800"
+                        : "text-slate-400 hover:text-amber-500 hover:bg-amber-50/60 dark:hover:bg-slate-800"
+                    }`}
+                    title={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
+                  >
+                    <Star
+                      className={`w-3.5 h-3.5 ${
+                        isFavorite ? "fill-amber-400 text-amber-500" : ""
+                      } ${favLoading ? "animate-pulse" : ""}`}
+                    />
+                    <span className="text-[10px]">
+                      {isFavorite ? t("savedToFavorites") : t("addFavoriteLabel")}
+                    </span>
+                  </button>
+                  <button
                     onClick={handleCopyPnr}
-                    className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                    title="Copy PNR"
+                    className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ml-1"
+                    title={t("copyPnr")}
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                   <button
                     onClick={handleSharePnr}
                     className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                    title="Share PNR"
+                    title={t("sharePnr")}
                   >
                     {shared ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
                   </button>
@@ -277,7 +360,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
               {/* Route & Schedule Timeline */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center bg-[#faf8f5]/60 dark:bg-slate-900/40 p-4 rounded-xl border border-[#f2eae1] dark:border-slate-850">
                 <div>
-                  <div className="text-xs text-slate-400 uppercase font-semibold">Boarding Station</div>
+                  <div className="text-xs text-slate-400 uppercase font-semibold">{t("boardingStation")}</div>
                   <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">{activePnr.from}</div>
                   <div className="text-xs text-amber-700 dark:text-amber-400 font-mono font-bold">
                     {activePnr.fromCode} • {activePnr.departureTime || "16:55"}
@@ -295,7 +378,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
                 </div>
 
                 <div className="sm:text-right">
-                  <div className="text-xs text-slate-400 uppercase font-semibold">Destination Station</div>
+                  <div className="text-xs text-slate-400 uppercase font-semibold">{t("destinationStation")}</div>
                   <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">{activePnr.to}</div>
                   <div className="text-xs text-amber-700 dark:text-amber-400 font-mono font-bold">
                     {activePnr.toCode} • {activePnr.arrivalTime || "21:45"}
@@ -306,19 +389,19 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
               {/* Passenger Status Table */}
               <div className="space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-[#c05621]" /> Passenger Status Breakdown
+                  <User className="w-4 h-4 text-[#c05621]" /> {t("passengerBreakdown")}
                 </h3>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-[#faf8f5] dark:bg-slate-900 text-slate-600 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="p-3">Passenger</th>
-                        <th className="p-3">Booking Berths</th>
-                        <th className="p-3">Current Status</th>
+                        <th className="p-3">{t("passenger")}</th>
+                        <th className="p-3">{t("bookingBerths")}</th>
+                        <th className="p-3">{t("currentStatus")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
-                      {activePnr.passengers.map((p, idx) => (
+                      {activePnr.passengers.map((p: Passenger, idx: number) => (
                         <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40">
                           <td className="p-3 font-semibold text-slate-900 dark:text-white">{p.name}</td>
                           <td className="p-3 text-slate-500 font-mono text-[11px]">{p.bookingStatus}</td>
@@ -338,7 +421,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
               {/* Feature Tip Footer */}
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Auto-sync keeps chart status updated live without manual refresh.
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" /> {t("autoSyncTip")}
                 </span>
                 <span className="font-mono text-[10px] text-slate-400">API Endpoint: /api/pnr/{activePnr.pnr}</span>
               </div>
@@ -353,9 +436,9 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
           <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-[#c05621] flex items-center justify-center mb-3">
             <Train className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Track Live PNR Status</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{t("trackLivePnrStatus")}</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
-            Enter any 10-digit IRCTC PNR number in the search box above to view real-time train status, platform, delay info, and passenger berths.
+            {t("enterPnrPrompt")}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <span className="text-[11px] font-mono text-slate-500 bg-white dark:bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800">

@@ -16,8 +16,12 @@ import {
   Search, 
   Activity, 
   Users,
-  LayoutDashboard 
+  LayoutDashboard,
+  Sun,
+  Moon
 } from "lucide-react";
+import { applyTheme } from "@/lib/theme-utils";
+import { t, getSavedLanguage, LanguageCode } from "@/lib/i18n";
 import { PnrTracker } from "./pnr-tracker";
 import { BookingHistory, type BookingRecord } from "./booking-history";
 import { SavedFavorites } from "./saved-favorites";
@@ -95,27 +99,39 @@ export function DashboardClient({ session }: DashboardClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole]);
 
+  const [currentLang, setCurrentLang] = useState<LanguageCode>(() => getSavedLanguage());
+
+  useEffect(() => {
+    const handleLangChange = (e: CustomEvent<LanguageCode>) => {
+      setCurrentLang(e.detail);
+    };
+    window.addEventListener("languageChange", handleLangChange as EventListener);
+    return () => {
+      window.removeEventListener("languageChange", handleLangChange as EventListener);
+    };
+  }, []);
+
   // Navigation specs per role
   const getNavigationItems = () => {
     if (userRole === "staff") {
       return [
-        { id: "manifest", name: "Station Manifest", icon: Clipboard },
+        { id: "manifest", name: t("staffPortal", currentLang), icon: Clipboard },
         { id: "ops", name: "Train Operations", icon: Volume2 },
-        { id: "pnr", name: "PNR Lookup", icon: Search },
+        { id: "pnr", name: t("livePnrTracker", currentLang), icon: Search },
       ];
     }
     if (userRole === "admin") {
       return [
-        { id: "overview", name: "System Overview", icon: Activity },
+        { id: "overview", name: t("dashboardOverview", currentLang), icon: Activity },
         { id: "staff", name: "Manage Staff", icon: Users },
         { id: "passengers", name: "Manage Passengers", icon: User },
       ];
     }
     return [
-      { id: "overview", name: "Dashboard Overview", icon: LayoutDashboard },
-      { id: "pnr", name: "Live PNR Tracker", icon: Train },
-      { id: "history", name: "Booking History", icon: BookOpen },
-      { id: "favorites", name: "Saved Favorites", icon: Star },
+      { id: "overview", name: t("dashboardOverview", currentLang), icon: LayoutDashboard },
+      { id: "pnr", name: t("livePnrTracker", currentLang), icon: Train },
+      { id: "history", name: t("bookingHistory", currentLang), icon: BookOpen },
+      { id: "favorites", name: t("savedFavorites", currentLang), icon: Star },
     ];
   };
 
@@ -219,7 +235,13 @@ export function DashboardClient({ session }: DashboardClientProps) {
           </div>
 
           {/* Profile Card */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-[#f2eae1] dark:border-slate-800 flex items-center gap-3">
+          <div 
+            onClick={() => {
+              setActiveTab("settings");
+              setMobileMenuOpen(false);
+            }}
+            className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-[#f2eae1] dark:border-slate-800 flex items-center gap-3 cursor-pointer hover:border-amber-300 dark:hover:border-slate-700 transition-all"
+          >
             <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-slate-900 flex items-center justify-center text-[#c05621] border border-amber-200 dark:border-slate-800 shrink-0">
               <User className="w-5 h-5" />
             </div>
@@ -264,9 +286,19 @@ export function DashboardClient({ session }: DashboardClientProps) {
 
         {/* Footer actions */}
         <div className="space-y-1.5 border-t border-[#f2eae1] dark:border-slate-800 pt-4">
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100/50">
+          <button
+            onClick={() => {
+              setActiveTab("settings");
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
+              activeTab === "settings"
+                ? "bg-[#c05621] text-white shadow-sm shadow-[#c05621]/15"
+                : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/50"
+            }`}
+          >
             <Settings className="w-4 h-4" />
-            Settings
+            {t("settings", currentLang)}
           </button>
           <button
             onClick={async () => {
@@ -275,7 +307,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
             className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-xl"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("signOut", currentLang)}
           </button>
         </div>
       </aside>
@@ -285,11 +317,23 @@ export function DashboardClient({ session }: DashboardClientProps) {
         {/* Top Navbar */}
         <header className="h-14 border-b border-[#eaddcd] dark:border-slate-800 bg-[#faf8f5]/60 dark:bg-slate-900/40 backdrop-blur-md px-6 hidden lg:flex items-center justify-between">
           <span className="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider">
-            Portal access: {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+            {t("portalAccess", currentLang)}: {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
           </span>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
-            <span>Help Desk</span>
-            <span>Live Alerts</span>
+            <span>{t("helpDesk", currentLang)}</span>
+            <span>{t("liveAlerts", currentLang)}</span>
+            <button
+              onClick={() => {
+                const isDark = document.documentElement.classList.contains("dark");
+                applyTheme(isDark ? "light" : "dark");
+              }}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-1.5"
+              title="Toggle Theme Mode"
+            >
+              <Sun className="w-3.5 h-3.5 hidden dark:block text-amber-400" />
+              <Moon className="w-3.5 h-3.5 block dark:hidden text-slate-600" />
+              <span className="text-[11px] font-bold">Theme</span>
+            </button>
           </div>
         </header>
 
@@ -321,7 +365,28 @@ export function DashboardClient({ session }: DashboardClientProps) {
                   }}
                 />
               )}
-              {activeTab === "pnr" && <PnrTracker initialPnr={selectedPnr} />}
+              {activeTab === "pnr" && (
+                <PnrTracker
+                  initialPnr={selectedPnr}
+                  favorites={favorites}
+                  onAddFavorite={async (pnr, label) => {
+                    const res = await addFavorite(pnr, label || "Pinned Route");
+                    if (res.success) {
+                      await loadPortalData();
+                    } else {
+                      alert(res.error || "Failed to add favorite");
+                    }
+                  }}
+                  onRemoveFavorite={async (id) => {
+                    const res = await removeFavorite(id);
+                    if (res.success) {
+                      await loadPortalData();
+                    } else {
+                      alert(res.error || "Failed to remove favorite");
+                    }
+                  }}
+                />
+              )}
               {activeTab === "history" && <BookingHistory bookings={bookings} />}
               {activeTab === "favorites" && (
                 <SavedFavorites 
@@ -361,7 +426,28 @@ export function DashboardClient({ session }: DashboardClientProps) {
                   setActiveSubTab={(tab) => setActiveTab(tab)}
                 />
               )}
-              {activeTab === "pnr" && <PnrTracker initialPnr={selectedPnr} />}
+              {activeTab === "pnr" && (
+                <PnrTracker
+                  initialPnr={selectedPnr}
+                  favorites={favorites}
+                  onAddFavorite={async (pnr, label) => {
+                    const res = await addFavorite(pnr, label || "Pinned Route");
+                    if (res.success) {
+                      await loadPortalData();
+                    } else {
+                      alert(res.error || "Failed to add favorite");
+                    }
+                  }}
+                  onRemoveFavorite={async (id) => {
+                    const res = await removeFavorite(id);
+                    if (res.success) {
+                      await loadPortalData();
+                    } else {
+                      alert(res.error || "Failed to remove favorite");
+                    }
+                  }}
+                />
+              )}
             </>
           )}
 
