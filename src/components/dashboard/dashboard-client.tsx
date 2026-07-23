@@ -61,8 +61,16 @@ export function DashboardClient({ session }: DashboardClientProps) {
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const userName = session?.user?.name || "Demo User";
-  const userEmail = session?.user?.email || "demo@railwaypnr.com";
+  const [userName, setUserName] = useState(session?.user?.name || "Demo User");
+  const [userEmail, setUserEmail] = useState(session?.user?.email || "demo@railwaypnr.com");
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("profile_name");
+    const savedEmail = localStorage.getItem("profile_email");
+    if (savedName) setUserName(savedName);
+    if (savedEmail) setUserEmail(savedEmail);
+  }, []);
+
 
   // Data Loading Trigger
   const loadPortalData = async () => {
@@ -347,7 +355,13 @@ export function DashboardClient({ session }: DashboardClientProps) {
               </div>
             </div>
           ) : activeTab === "settings" ? (
-            <SettingsPortal user={session?.user} />
+            <SettingsPortal 
+              user={{ ...session?.user, name: userName, email: userEmail }} 
+              onProfileUpdate={(name, email) => {
+                setUserName(name);
+                setUserEmail(email);
+              }}
+            />
           ) : (
             <>
           {userRole === "passenger" && (

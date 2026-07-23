@@ -101,10 +101,9 @@ export function DashboardOverview({
             </Button>
             <Button
               onClick={() => onNavigateTab("favorites")}
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 text-xs font-semibold h-9 px-4 rounded-xl"
+              className="bg-white hover:bg-amber-50 text-amber-900 text-xs font-bold h-9 px-4 rounded-xl shadow-md transition-all"
             >
-              {t("viewSavedFavorites")}
+              {t("viewSavedFavorites")} <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
             </Button>
           </div>
         </div>

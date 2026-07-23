@@ -162,3 +162,112 @@ html.text-scale-medium {
 html.text-scale-large {
   font-size: 18px !important;
 }
+
+/* Reduced Motion Rules */
+html.reduced-motion *,
+html.reduced-motion *::before,
+html.reduced-motion *::after {
+  animation-delay: -1ms !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  background-attachment: initial !important;
+  scroll-behavior: auto !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+}
+
+/* High Contrast Mode Rules */
+html.high-contrast {
+  --background: #ffffff !important;
+  --foreground: #000000 !important;
+  --card: #ffffff !important;
+  --card-foreground: #000000 !important;
+  --popover: #ffffff !important;
+  --popover-foreground: #000000 !important;
+  --primary: #9a3412 !important; /* Starker contrast terracotta orange */
+  --primary-foreground: #ffffff !important;
+  --secondary: #f5f5f4 !important;
+  --secondary-foreground: #000000 !important;
+  --muted: #f5f5f4 !important;
+  --muted-foreground: #1c1917 !important;
+  --accent: #f5f5f4 !important;
+  --accent-foreground: #000000 !important;
+  --border: #78716c !important; /* Starker, highly visible border color */
+  --input: #78716c !important;
+  --ring: #9a3412 !important;
+
+  --bg-app: #ffffff !important;
+  --bg-sidebar: #f5f5f4 !important;
+  --bg-card: #ffffff !important;
+  --border-theme: #78716c !important;
+  --accent-theme: #9a3412 !important;
+}
+
+html.high-contrast.dark {
+  --background: #090d16 !important;
+  --foreground: #ffffff !important;
+  --card: #0f172a !important;
+  --card-foreground: #ffffff !important;
+  --popover: #0f172a !important;
+  --popover-foreground: #ffffff !important;
+  --primary: #ea580c !important;
+  --primary-foreground: #000000 !important;
+  --secondary: #1e293b !important;
+  --secondary-foreground: #ffffff !important;
+  --muted: #1e293b !important;
+  --muted-foreground: #e2e8f0 !important;
+  --accent: #1e293b !important;
+  --accent-foreground: #ffffff !important;
+  --border: #94a3b8 !important;
+  --input: #94a3b8 !important;
+  --ring: #ea580c !important;
+
+  --bg-app: #090d16 !important;
+  --bg-sidebar: #0f172a !important;
+  --bg-card: #0f172a !important;
+  --border-theme: #94a3b8 !important;
+  --accent-theme: #ea580c !important;
+}
+
+/* Polished High Contrast targeted overrides */
+html.high-contrast body {
+  color: var(--foreground) !important;
+}
+
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6,
+html.high-contrast label {
+  color: var(--foreground) !important;
+}
+
+html.high-contrast .border,
+html.high-contrast [class*="border-"] {
+  border-color: var(--border) !important;
+}
+
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea {
+  border-color: var(--border) !important;
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+html.high-contrast.dark input,
+html.high-contrast.dark select,
+html.high-contrast.dark textarea {
+  color: #ffffff !important;
+  background-color: #090d16 !important;
+}
+
+html.high-contrast svg {
+  stroke: var(--foreground) !important;
+}
+
+

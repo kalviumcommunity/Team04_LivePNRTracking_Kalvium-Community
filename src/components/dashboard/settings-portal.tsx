@@ -1,8 +1,20 @@
 "use client";
 // Settings & Security Portal Component
 
-import { useState } from "react";
-import { applyTheme, getSavedTheme, ThemeMode, applyTextScaling, getSavedTextScaling, TextScaleMode } from "@/lib/theme-utils";
+import { useState, useEffect } from "react";
+import { 
+  applyTheme, 
+  getSavedTheme, 
+  ThemeMode, 
+  applyTextScaling, 
+  getSavedTextScaling, 
+  TextScaleMode,
+  applyReducedMotion,
+  getSavedReducedMotion,
+  applyHighContrast,
+  getSavedHighContrast
+} from "@/lib/theme-utils";
+import { updateProfile } from "@/actions/settings";
 import { SUPPORTED_LANGUAGES, getSavedLanguage, setSavedLanguage, LanguageCode, useTranslation } from "@/lib/i18n";
 import {
   User,
@@ -37,6 +49,7 @@ interface SettingsPortalProps {
     email?: string | null;
     role?: string | null;
   } | null;
+  onProfileUpdate?: (name: string, email: string) => void;
 }
 
 type TabType = "account" | "security" | "preferences" | "notifications" | "developer" | "privacy";
@@ -67,7 +80,7 @@ interface AuditLogItem {
   status: "Success" | "Warning" | "Failed";
 }
 
-export function SettingsPortal({ user }: SettingsPortalProps) {
+export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("account");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -77,6 +90,20 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
   const [email, setEmail] = useState(user?.email || "akhilants134@gmail.com");
   const [phone, setPhone] = useState("+91 98765 43210");
   const [bio, setBio] = useState("Railway enthusiast & software engineer.");
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("profile_name");
+    const savedUsername = localStorage.getItem("profile_username");
+    const savedEmail = localStorage.getItem("profile_email");
+    const savedPhone = localStorage.getItem("profile_phone");
+    const savedBio = localStorage.getItem("profile_bio");
+
+    if (savedName) setName(savedName);
+    if (savedUsername) setUsername(savedUsername);
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPhone) setPhone(savedPhone);
+    if (savedBio) setBio(savedBio);
+  }, []);
 
   // --- Security State ---
   const [currentPassword, setCurrentPassword] = useState("");
@@ -107,8 +134,8 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
   const [language, setLanguage] = useState<LanguageCode>(() => getSavedLanguage());
   const [timezone, setTimezone] = useState("Asia/Kolkata (IST +5:30)");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => getSavedReducedMotion());
+  const [highContrast, setHighContrast] = useState(() => getSavedHighContrast());
   const [fontSize, setFontSize] = useState<TextScaleMode>(() => getSavedTextScaling());
 
   // --- Notifications State ---
@@ -240,6 +267,28 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
     showToast("User data export started!");
   };
 
+  const handleSaveChanges = async () => {
+    localStorage.setItem("profile_name", name);
+    localStorage.setItem("profile_username", username);
+    localStorage.setItem("profile_email", email);
+    localStorage.setItem("profile_phone", phone);
+    localStorage.setItem("profile_bio", bio);
+
+    try {
+      const res = await updateProfile({ name, email });
+      if (res.error) {
+        showToast(`Error: ${res.error}`);
+      } else {
+        showToast(res.success || "All settings saved and synchronized with server.");
+        if (onProfileUpdate) {
+          onProfileUpdate(name, email);
+        }
+      }
+    } catch (err) {
+      showToast("Failed to save changes.");
+    }
+  };
+
   const { t } = useTranslation();
 
   const tabs = [
@@ -273,7 +322,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => showToast("All settings saved and synchronized with server.")}
+            onClick={handleSaveChanges}
             className="px-4 py-2 bg-[#c05621] hover:bg-[#a8481b] text-white text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2"
           >
             <Check className="w-4 h-4" />
@@ -794,7 +843,11 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                     <input
                       type="checkbox"
                       checked={reducedMotion}
-                      onChange={(e) => setReducedMotion(e.target.checked)}
+                      onChange={(e) => {
+                        setReducedMotion(e.target.checked);
+                        applyReducedMotion(e.target.checked);
+                        showToast(e.target.checked ? "Reduced motion enabled." : "Reduced motion disabled.");
+                      }}
                       className="w-4 h-4 text-amber-600 rounded-md"
                     />
                   </label>
@@ -806,7 +859,11 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                     <input
                       type="checkbox"
                       checked={highContrast}
-                      onChange={(e) => setHighContrast(e.target.checked)}
+                      onChange={(e) => {
+                        setHighContrast(e.target.checked);
+                        applyHighContrast(e.target.checked);
+                        showToast(e.target.checked ? "High contrast mode enabled." : "High contrast mode disabled.");
+                      }}
                       className="w-4 h-4 text-amber-600 rounded-md"
                     />
                   </label>

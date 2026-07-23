@@ -58,6 +58,20 @@ export default function RootLayout({
                     root.classList.add('text-scale-medium');
                     root.style.fontSize = '16px';
                   }
+
+                  var savedMotion = localStorage.getItem('reducedMotion');
+                  if (savedMotion === 'true') {
+                    root.classList.add('reduced-motion');
+                  } else {
+                    root.classList.remove('reduced-motion');
+                  }
+
+                  var savedContrast = localStorage.getItem('highContrast');
+                  if (savedContrast === 'true') {
+                    root.classList.add('high-contrast');
+                  } else {
+                    root.classList.remove('high-contrast');
+                  }
                 } catch (e) {}
               })();
             `,
