@@ -51,7 +51,7 @@ async function main() {
     }
   });
 
-  const staff = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Sanjay Sharma",
       email: "staff@railwaypnr.com",
@@ -61,7 +61,7 @@ async function main() {
     }
   });
 
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Priyanka Rathore",
       email: "admin@railwaypnr.com",

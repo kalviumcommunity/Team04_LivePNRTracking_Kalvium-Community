@@ -47,7 +47,7 @@ export async function getDashboardMetrics() {
       favoritesCount,
       totalJourneys,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[GET_DASHBOARD_METRICS]", error);
     return {
       activeBookingsCount: 0,
@@ -109,8 +109,7 @@ export async function bookTicket(data: {
     const seatNo = Math.floor(Math.random() * 64) + 1;
     const seatString = `${coach}/${seatNo}`;
 
-    // Calculate generic fare
-    const fareString = data.travelClass.includes("AC") ? "₹1,850" : "₹620";
+    // generic class booking logic
 
     const booking = await db.booking.create({
       data: {
@@ -138,9 +137,9 @@ export async function bookTicket(data: {
 
     revalidatePath("/dashboard");
     return { success: true, booking };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[BOOK_TICKET]", error);
-    return { error: error.message || "Failed to book ticket." };
+    return { error: (error as Error).message || "Failed to book ticket." };
   }
 }
 
@@ -187,9 +186,9 @@ export async function addFavorite(pnr: string, label: string) {
 
     revalidatePath("/dashboard");
     return { success: true, fav };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[ADD_FAVORITE]", error);
-    return { error: error.message || "Failed to save favorite PNR." };
+    return { error: (error as Error).message || "Failed to save favorite PNR." };
   }
 }
 
@@ -203,9 +202,9 @@ export async function removeFavorite(id: string) {
 
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[REMOVE_FAVORITE]", error);
-    return { error: error.message || "Failed to remove favorite." };
+    return { error: (error as Error).message || "Failed to remove favorite." };
   }
 }
 

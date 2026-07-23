@@ -87,6 +87,7 @@ export function PnrTracker({ initialPnr }: PnrTrackerProps = {}) {
   // Initial lookup handling
   useEffect(() => {
     if (initialPnr) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPnrInput(initialPnr);
       Promise.resolve().then(() => fetchLivePnr(initialPnr));
     }
