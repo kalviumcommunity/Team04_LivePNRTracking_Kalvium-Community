@@ -30,8 +30,8 @@ export async function getDashboardMetrics() {
 
     const activeBookings = bookings.filter((b) => b.status !== "CAN");
     const confirmedCount = bookings.filter((b) => b.status === "CNF").length;
-    const confirmedRatio = bookings.length > 0 
-      ? Math.round((confirmedCount / bookings.length) * 100) 
+    const confirmedRatio = bookings.length > 0
+      ? Math.round((confirmedCount / bookings.length) * 100)
       : 100;
 
     const favoritesCount = await db.favoritePNR.count({
@@ -62,8 +62,20 @@ export async function getDashboardMetrics() {
 export async function getBookings() {
   try {
     const user = await getAuthenticatedUser();
+    const now = new Date();
+    const ninetyDaysAgo = new Date(now);
+    ninetyDaysAgo.setDate(now.getDate() - 90);
+    const ninetyDaysAhead = new Date(now);
+    ninetyDaysAhead.setDate(now.getDate() + 90);
+
     const bookings = await db.booking.findMany({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        dateOfJourney: {
+          gte: ninetyDaysAgo,
+          lte: ninetyDaysAhead,
+        },
+      },
       orderBy: { dateOfJourney: "desc" },
     });
 
