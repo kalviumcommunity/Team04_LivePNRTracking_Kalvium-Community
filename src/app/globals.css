@@ -119,12 +119,46 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
   }
   html {
-    @apply font-sans;
+    font-family: var(--font-sans);
   }
+}
+
+/* --- Visual Profiles for Theme Modes --- */
+
+/* 1. Sahara Light Theme (Warm Desert Sand & Terracotta Accents) */
+html.theme-sahara:not(.dark) {
+  --bg-app: #fbf9f6;
+  --bg-sidebar: #faf8f5;
+  --bg-card: #faf8f5;
+  --border-theme: #eaddcd;
+  --accent-theme: #c05621;
+}
+
+html.theme-sahara:not(.dark) body {
+  background-color: #fbf9f6;
+}
+
+/* 2. Onyx Dark Theme */
+html.dark body {
+  background-color: #030712;
+}
+
+/* --- Text Scaling System Rules --- */
+html.text-scale-small {
+  font-size: 14px !important;
+}
+
+html.text-scale-medium {
+  font-size: 16px !important;
+}
+
+html.text-scale-large {
+  font-size: 18px !important;
 }

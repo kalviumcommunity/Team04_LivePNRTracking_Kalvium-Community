@@ -2,6 +2,8 @@
 // Settings & Security Portal Component
 
 import { useState } from "react";
+import { applyTheme, getSavedTheme, ThemeMode, applyTextScaling, getSavedTextScaling, TextScaleMode } from "@/lib/theme-utils";
+import { SUPPORTED_LANGUAGES, getSavedLanguage, setSavedLanguage, LanguageCode, useTranslation } from "@/lib/i18n";
 import {
   User,
   Shield,
@@ -24,7 +26,6 @@ import {
   Monitor,
   Moon,
   Sun,
-  Laptop,
   CheckCircle2,
   History,
   HardDrive
@@ -67,7 +68,7 @@ interface AuditLogItem {
 }
 
 export function SettingsPortal({ user }: SettingsPortalProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("security");
+  const [activeTab, setActiveTab] = useState<TabType>("account");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // --- Profile State ---
@@ -102,13 +103,13 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
   ]);
 
   // --- Preferences State ---
-  const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">("system");
-  const [language, setLanguage] = useState("English (US)");
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => getSavedTheme());
+  const [language, setLanguage] = useState<LanguageCode>(() => getSavedLanguage());
   const [timezone, setTimezone] = useState("Asia/Kolkata (IST +5:30)");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [reducedMotion, setReducedMotion] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
-  const [fontSize, setFontSize] = useState("medium");
+  const [fontSize, setFontSize] = useState<TextScaleMode>(() => getSavedTextScaling());
 
   // --- Notifications State ---
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -239,13 +240,15 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
     showToast("User data export started!");
   };
 
+  const { t } = useTranslation();
+
   const tabs = [
-    { id: "account" as TabType, name: "Account / Profile", icon: User, desc: "Personal info & username" },
-    { id: "security" as TabType, name: "Security & Login", icon: Shield, desc: "Password, 2FA, Sessions & Logs" },
-    { id: "preferences" as TabType, name: "Preferences", icon: Sliders, desc: "Theme, Language & Accessibility" },
-    { id: "notifications" as TabType, name: "Notifications", icon: Bell, desc: "Alert channels & PNR updates" },
-    { id: "developer" as TabType, name: "Developer & API", icon: Code, desc: "API keys & Webhook subscriptions" },
-    { id: "privacy" as TabType, name: "Privacy & Storage", icon: Lock, desc: "Visibility, Export & Data Retention" },
+    { id: "account" as TabType, name: t("accountProfile"), icon: User, desc: "Personal info & username" },
+    { id: "security" as TabType, name: t("securityLogin"), icon: Shield, desc: "Password, 2FA, Sessions & Logs" },
+    { id: "preferences" as TabType, name: t("preferences"), icon: Sliders, desc: "Theme, Language & Accessibility" },
+    { id: "notifications" as TabType, name: t("notifications"), icon: Bell, desc: "Alert channels & PNR updates" },
+    { id: "developer" as TabType, name: t("developerApi"), icon: Code, desc: "API keys & Webhook subscriptions" },
+    { id: "privacy" as TabType, name: t("privacyStorage"), icon: Lock, desc: "Visibility, Export & Data Retention" },
   ];
 
   return (
@@ -262,7 +265,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#eaddcd] dark:border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            System Settings & Security Portal
+            {t("systemSettingsTitle")}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Configure your account identity, multi-factor authentication, security policies, API credentials, and preferences.
@@ -274,7 +277,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
             className="px-4 py-2 bg-[#c05621] hover:bg-[#a8481b] text-white text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2"
           >
             <Check className="w-4 h-4" />
-            Save Changes
+            {t("saveChanges")}
           </button>
         </div>
       </div>
@@ -320,8 +323,8 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
           {activeTab === "account" && (
             <div className="space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Account & Profile Settings</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Manage your personal identification, username, and contact details.</p>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">{t("accountProfileSettings")}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("accountProfileDesc")}</p>
               </div>
 
               {/* Profile Card Summary */}
@@ -331,19 +334,19 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white">{name}</h3>
-                  <p className="text-xs text-slate-500">@{username} • {user?.role || "Passenger"}</p>
+                  <p className="text-xs text-slate-500">@{username} • {user?.role || t("passenger")}</p>
                   <button
                     onClick={() => showToast("Avatar upload modal opened.")}
                     className="mt-2 text-[11px] font-semibold text-[#c05621] hover:underline"
                   >
-                    Change profile picture
+                    {t("changeProfilePicture")}
                   </button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("fullName")}</label>
                   <input
                     type="text"
                     value={name}
@@ -352,7 +355,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Username</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("username")}</label>
                   <input
                     type="text"
                     value={username}
@@ -361,7 +364,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("emailAddress")}</label>
                   <div className="relative">
                     <input
                       type="email"
@@ -370,12 +373,12 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 outline-hidden"
                     />
                     <span className="absolute right-2.5 top-2.5 text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                      Verified
+                      {t("verified")}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("phoneNumber")}</label>
                   <input
                     type="text"
                     value={phone}
@@ -386,7 +389,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Bio / Notes</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("bioNotes")}</label>
                 <textarea
                   rows={3}
                   value={bio}
@@ -398,23 +401,23 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
               {/* Danger Zone */}
               <div className="border-t border-red-100 dark:border-red-950/40 pt-5 mt-6">
                 <h4 className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4" /> Danger Zone
+                  <AlertTriangle className="w-4 h-4" /> {t("dangerZone")}
                 </h4>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Permanently deactivate or remove your account and all associated booking histories.
+                  {t("dangerZoneDesc")}
                 </p>
                 <div className="flex items-center gap-3 mt-3">
                   <button
                     onClick={() => showToast("Account deactivation requested. Confirmation email sent.")}
                     className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/50 dark:hover:bg-red-900/60 dark:text-red-300 text-xs font-semibold rounded-lg transition-all"
                   >
-                    Deactivate Account
+                    {t("deactivateAccount")}
                   </button>
                   <button
                     onClick={() => showToast("Data deletion modal initialized.")}
                     className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-all"
                   >
-                    Delete Account Data
+                    {t("deleteAccountData")}
                   </button>
                 </div>
               </div>
@@ -675,18 +678,17 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
           {activeTab === "preferences" && (
             <div className="space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Preferences & Display Settings</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Tailor the visual theme, regional formats, and accessibility features.</p>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">{t("preferencesDisplayTitle")}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("preferencesDisplayDesc")}</p>
               </div>
 
               {/* Theme Mode Selector */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-900 dark:text-white">Color Theme</label>
-                <div className="grid grid-cols-3 gap-3">
+                <label className="block text-xs font-bold text-slate-900 dark:text-white">{t("colorTheme")}</label>
+                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { id: "system" as const, name: "System", icon: Laptop },
-                    { id: "light" as const, name: "Sahara Light", icon: Sun },
-                    { id: "dark" as const, name: "Onyx Dark", icon: Moon },
+                    { id: "light" as const, name: t("saharaLight"), icon: Sun },
+                    { id: "dark" as const, name: t("onyxDark"), icon: Moon },
                   ].map((item) => {
                     const Icon = item.icon;
                     const isSelected = themeMode === item.id;
@@ -695,6 +697,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                         key={item.id}
                         onClick={() => {
                           setThemeMode(item.id);
+                          applyTheme(item.id);
                           showToast(`Theme switched to ${item.name}`);
                         }}
                         className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center gap-2 ${
@@ -714,20 +717,27 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
               {/* Language & Regional */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Language</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("language")}</label>
                   <select
                     value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
+                    onChange={(e) => {
+                      const code = e.target.value as LanguageCode;
+                      setLanguage(code);
+                      setSavedLanguage(code);
+                      const langConfig = SUPPORTED_LANGUAGES.find((l) => l.code === code);
+                      showToast(`Language updated to ${langConfig?.label || code}`);
+                    }}
                     className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs"
                   >
-                    <option>English (US)</option>
-                    <option>Hindi (हिन्दी)</option>
-                    <option>Bengali (বাংলা)</option>
-                    <option>Tamil (தமிழ்)</option>
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Timezone</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("timezone")}</label>
                   <select
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
@@ -739,7 +749,7 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Date Format</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("dateFormat")}</label>
                   <select
                     value={dateFormat}
                     onChange={(e) => setDateFormat(e.target.value)}
@@ -754,18 +764,23 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
 
               {/* Accessibility Toggles & Font Size */}
               <div className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-4">
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white">Accessibility & Font Options</h3>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">{t("accessibilityOptions")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Text Scaling</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("textScaling")}</label>
                     <select
                       value={fontSize}
-                      onChange={(e) => setFontSize(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value as TextScaleMode;
+                        setFontSize(val);
+                        applyTextScaling(val);
+                        showToast(`Text scaling set to ${val}`);
+                      }}
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs"
                     >
-                      <option value="small">Small (Compact UI)</option>
-                      <option value="medium">Medium (Standard)</option>
-                      <option value="large">Large (High Legibility)</option>
+                      <option value="small">{t("smallUI")}</option>
+                      <option value="medium">{t("mediumUI")}</option>
+                      <option value="large">{t("largeUI")}</option>
                     </select>
                   </div>
                 </div>
@@ -773,8 +788,8 @@ export function SettingsPortal({ user }: SettingsPortalProps) {
                 <div className="space-y-2 pt-2">
                   <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs cursor-pointer">
                     <div>
-                      <span className="font-bold block">Reduced Motion</span>
-                      <span className="text-[10px] text-slate-500">Minimize animations and smooth scrolling.</span>
+                      <span className="font-bold block">{t("reducedMotion")}</span>
+                      <span className="text-[10px] text-slate-500">{t("reducedMotionDesc")}</span>
                     </div>
                     <input
                       type="checkbox"

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, Send, Check, RefreshCw, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n";
 
 export interface ManifestPassenger {
   id: string;
@@ -24,6 +25,7 @@ interface StaffPortalProps {
 }
 
 export function StaffPortal({ passengers, onUpdatePassengerStatus, activeSubTab, setActiveSubTab }: StaffPortalProps) {
+  const { t } = useTranslation();
   const [selectedStation, setSelectedStation] = useState("NDLS");
   const [alertText, setAlertText] = useState("");
   const [alertSuccess, setAlertSuccess] = useState(false);
@@ -67,7 +69,7 @@ export function StaffPortal({ passengers, onUpdatePassengerStatus, activeSubTab,
               : "border-transparent text-slate-400 hover:text-slate-700"
           }`}
         >
-          Station Manifest
+          {t("stationManifest")}
         </button>
         <button
           onClick={() => setActiveSubTab("ops")}
@@ -77,7 +79,7 @@ export function StaffPortal({ passengers, onUpdatePassengerStatus, activeSubTab,
               : "border-transparent text-slate-400 hover:text-slate-700"
           }`}
         >
-          Train Operations
+          {t("trainOperations")}
         </button>
       </div>
 
@@ -104,15 +106,15 @@ export function StaffPortal({ passengers, onUpdatePassengerStatus, activeSubTab,
             {/* Counts metrics */}
             <div className="flex gap-4">
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 block uppercase font-semibold">Boarding Here</span>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("boardingHere")}</span>
                 <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100">{totalBoarding}</span>
               </div>
               <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-                <span className="text-[10px] text-slate-400 block uppercase font-semibold">Checked In</span>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("checkedIn")}</span>
                 <span className="text-xl font-extrabold text-emerald-600">{totalCheckedIn}</span>
               </div>
               <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-                <span className="text-[10px] text-slate-400 block uppercase font-semibold">On-Board</span>
+                <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("onBoard")}</span>
                 <span className="text-xl font-extrabold text-[#c05621]">{totalOnBoard}</span>
               </div>
             </div>
@@ -124,11 +126,11 @@ export function StaffPortal({ passengers, onUpdatePassengerStatus, activeSubTab,
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#fcfbf9]/60 dark:bg-slate-900/40 border-b border-[#f2eae1] dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    <th className="px-6 py-4">Passenger Name</th>
+                    <th className="px-6 py-4">{t("passengerName")}</th>
                     <th className="px-6 py-4">PNR</th>
-                    <th className="px-6 py-4">Seat</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                    <th className="px-6 py-4">{t("seat")}</th>
+                    <th className="px-6 py-4">{t("currentStatus")}</th>
+                    <th className="px-6 py-4 text-right">{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f2eae1] dark:divide-slate-800">
