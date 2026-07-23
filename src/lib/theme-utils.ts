@@ -53,3 +53,36 @@ export function getSavedTextScaling(): TextScaleMode {
   }
   return "medium";
 }
+
+export function applyReducedMotion(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  localStorage.setItem("reducedMotion", enabled ? "true" : "false");
+  if (enabled) {
+    root.classList.add("reduced-motion");
+  } else {
+    root.classList.remove("reduced-motion");
+  }
+}
+
+export function getSavedReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("reducedMotion") === "true";
+}
+
+export function applyHighContrast(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  localStorage.setItem("highContrast", enabled ? "true" : "false");
+  if (enabled) {
+    root.classList.add("high-contrast");
+  } else {
+    root.classList.remove("high-contrast");
+  }
+}
+
+export function getSavedHighContrast(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("highContrast") === "true";
+}
+
