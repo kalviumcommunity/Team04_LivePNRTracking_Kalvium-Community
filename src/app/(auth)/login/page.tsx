@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/login-form";
-import { Train } from "lucide-react";
+import { Train, Home } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -59,6 +60,16 @@ export default function LoginPage() {
             <Train className="w-5 h-5 text-[#c05621]" />
           </div>
           <span className="text-2xl font-bold tracking-wide">Ixigo Live PNR Tracker</span>
+        </div>
+        {/* Home Button near the form */}
+        <div className="w-full max-w-md mb-4 flex justify-start">
+          <Link
+            href="/"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 transition-colors shadow-sm"
+          >
+            <Home className="w-3.5 h-3.5 text-slate-500" />
+            <span>Home</span>
+          </Link>
         </div>
         
         <LoginForm />
