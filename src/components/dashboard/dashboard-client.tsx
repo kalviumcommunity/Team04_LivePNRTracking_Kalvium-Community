@@ -18,7 +18,8 @@ import {
   Users,
   LayoutDashboard,
   Sun,
-  Moon
+  Moon,
+  Ticket
 } from "lucide-react";
 import { applyTheme } from "@/lib/theme-utils";
 import { t, getSavedLanguage, LanguageCode } from "@/lib/i18n";
@@ -29,6 +30,7 @@ import { StaffPortal, type ManifestPassenger } from "./staff-portal";
 import { AdminPortal, type StaffMember } from "./admin-portal";
 import { SettingsPortal } from "@/components/dashboard/settings-portal";
 import { DashboardOverview } from "./dashboard-overview";
+import { TicketBooking } from "./ticket-booking";
 import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite } from "@/actions/passenger";
 import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus } from "@/actions/admin";
 import { updatePassengerBoarding } from "@/actions/staff";
@@ -137,6 +139,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
     }
     return [
       { id: "overview", name: t("dashboardOverview", currentLang), icon: LayoutDashboard },
+      { id: "book", name: t("bookTicketNow", currentLang) || "Book Ticket", icon: Ticket },
       { id: "pnr", name: t("livePnrTracker", currentLang), icon: Train },
       { id: "history", name: t("bookingHistory", currentLang), icon: BookOpen },
       { id: "favorites", name: t("savedFavorites", currentLang), icon: Star },
@@ -399,6 +402,14 @@ export function DashboardClient({ session }: DashboardClientProps) {
                       alert(res.error || "Failed to remove favorite");
                     }
                   }}
+                />
+              )}
+              {activeTab === "book" && (
+                <TicketBooking 
+                  onBookSuccess={async () => {
+                    await loadPortalData();
+                  }}
+                  bookTicketAction={bookTicket}
                 />
               )}
               {activeTab === "history" && <BookingHistory bookings={bookings} />}

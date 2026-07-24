@@ -99,12 +99,12 @@ export function DashboardOverview({
             >
               {t("trackLivePnr")} <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
             </Button>
-            <Button
+            <button
               onClick={() => onNavigateTab("favorites")}
-              className="bg-white hover:bg-amber-50 text-amber-900 text-xs font-bold h-9 px-4 rounded-xl shadow-md transition-all"
+              className="border border-white/30 text-white hover:bg-white/10 active:scale-[0.98] text-xs font-semibold h-9 px-4 rounded-xl transition-all"
             >
-              {t("viewSavedFavorites")} <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-            </Button>
+              {t("viewSavedFavorites")}
+            </button>
           </div>
         </div>
       </div>
