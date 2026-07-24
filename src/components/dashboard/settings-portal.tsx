@@ -14,7 +14,7 @@ import {
   applyHighContrast,
   getSavedHighContrast
 } from "@/lib/theme-utils";
-import { updateProfile } from "@/actions/settings";
+import { updateProfile, changePassword } from "@/actions/settings";
 import { SUPPORTED_LANGUAGES, getSavedLanguage, setSavedLanguage, LanguageCode, useTranslation } from "@/lib/i18n";
 import {
   User,
@@ -91,20 +91,6 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   const [phone, setPhone] = useState("+91 98765 43210");
   const [bio, setBio] = useState("Railway enthusiast & software engineer.");
 
-  useEffect(() => {
-    const savedName = localStorage.getItem("profile_name");
-    const savedUsername = localStorage.getItem("profile_username");
-    const savedEmail = localStorage.getItem("profile_email");
-    const savedPhone = localStorage.getItem("profile_phone");
-    const savedBio = localStorage.getItem("profile_bio");
-
-    if (savedName) setName(savedName);
-    if (savedUsername) setUsername(savedUsername);
-    if (savedEmail) setEmail(savedEmail);
-    if (savedPhone) setPhone(savedPhone);
-    if (savedBio) setBio(savedBio);
-  }, []);
-
   // --- Security State ---
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -170,12 +156,78 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   const [analyticsConsent, setAnalyticsConsent] = useState(true);
   const [dataRetention, setDataRetention] = useState("90");
 
+  useEffect(() => {
+    const savedName = localStorage.getItem("profile_name");
+    const savedUsername = localStorage.getItem("profile_username");
+    const savedEmail = localStorage.getItem("profile_email");
+    const savedPhone = localStorage.getItem("profile_phone");
+    const savedBio = localStorage.getItem("profile_bio");
+
+    // 2FA & Security
+    const saved2FaEnabled = localStorage.getItem("security_2fa_enabled");
+    const saved2FaMethod = localStorage.getItem("security_2fa_method");
+    const savedSessionTimeout = localStorage.getItem("security_session_timeout");
+    const savedIpList = localStorage.getItem("security_ip_list");
+    const savedSessions = localStorage.getItem("security_sessions");
+
+    // Notifications
+    const savedEmailAlerts = localStorage.getItem("notify_email_alerts");
+    const savedPushAlerts = localStorage.getItem("notify_push_alerts");
+    const savedSmsAlerts = localStorage.getItem("notify_sms_alerts");
+    const savedPnrUpdates = localStorage.getItem("notify_pnr_updates");
+    const savedDelayAlerts = localStorage.getItem("notify_delay_alerts");
+    const savedMarketingAlerts = localStorage.getItem("notify_marketing_alerts");
+    const savedDigestFreq = localStorage.getItem("notify_digest_freq");
+
+    // Developer API
+    const savedApiKeys = localStorage.getItem("dev_api_keys");
+    const savedWebhookUrl = localStorage.getItem("dev_webhook_url");
+    const savedWebhookEvents = localStorage.getItem("dev_webhook_events");
+
+    // Privacy
+    const savedVisibility = localStorage.getItem("privacy_visibility");
+    const savedShareHistory = localStorage.getItem("privacy_share_history");
+    const savedAnalyticsConsent = localStorage.getItem("privacy_analytics_consent");
+    const savedRetention = localStorage.getItem("privacy_retention");
+
+    setTimeout(() => {
+      if (savedName) setName(savedName);
+      if (savedUsername) setUsername(savedUsername);
+      if (savedEmail) setEmail(savedEmail);
+      if (savedPhone) setPhone(savedPhone);
+      if (savedBio) setBio(savedBio);
+
+      if (saved2FaEnabled !== null) setTwoFactorEnabled(saved2FaEnabled === "true");
+      if (saved2FaMethod) setTwoFactorMethod(saved2FaMethod as "app" | "sms");
+      if (savedSessionTimeout) setSessionTimeout(savedSessionTimeout);
+      if (savedIpList) setIpList(JSON.parse(savedIpList));
+      if (savedSessions) setSessions(JSON.parse(savedSessions));
+
+      if (savedEmailAlerts !== null) setEmailAlerts(savedEmailAlerts === "true");
+      if (savedPushAlerts !== null) setPushAlerts(savedPushAlerts === "true");
+      if (savedSmsAlerts !== null) setSmsAlerts(savedSmsAlerts === "true");
+      if (savedPnrUpdates !== null) setPnrStatusUpdates(savedPnrUpdates === "true");
+      if (savedDelayAlerts !== null) setDelayAlerts(savedDelayAlerts === "true");
+      if (savedMarketingAlerts !== null) setMarketingAlerts(savedMarketingAlerts === "true");
+      if (savedDigestFreq) setDigestFrequency(savedDigestFreq);
+
+      if (savedApiKeys) setApiKeys(JSON.parse(savedApiKeys));
+      if (savedWebhookUrl) setWebhookUrl(savedWebhookUrl);
+      if (savedWebhookEvents) setWebhookEvents(JSON.parse(savedWebhookEvents));
+
+      if (savedVisibility) setProfileVisibility(savedVisibility as "public" | "private");
+      if (savedShareHistory !== null) setShareHistory(savedShareHistory === "true");
+      if (savedAnalyticsConsent !== null) setAnalyticsConsent(savedAnalyticsConsent === "true");
+      if (savedRetention) setDataRetention(savedRetention);
+    }, 0);
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword) {
       showToast("Please enter your current password.");
@@ -189,19 +241,38 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
       showToast("New passwords do not match.");
       return;
     }
-    showToast("Password updated successfully!");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+
+    try {
+      const res = await changePassword({
+        current: currentPassword,
+        newPass: newPassword,
+      });
+
+      if (res.error) {
+        showToast(res.error);
+      } else {
+        showToast(res.success || "Password updated successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("An error occurred. Please try again.");
+    }
   };
 
   const handleRevokeSession = (id: string) => {
-    setSessions(sessions.filter((s) => s.id !== id));
+    const updated = sessions.filter((s) => s.id !== id);
+    setSessions(updated);
+    localStorage.setItem("security_sessions", JSON.stringify(updated));
     showToast("Session logged out successfully.");
   };
 
   const handleRevokeAllOtherSessions = () => {
-    setSessions(sessions.filter((s) => s.isCurrent));
+    const updated = sessions.filter((s) => s.isCurrent);
+    setSessions(updated);
+    localStorage.setItem("security_sessions", JSON.stringify(updated));
     showToast("All other active sessions have been terminated.");
   };
 
@@ -217,7 +288,9 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
       created: "Just now",
       lastUsed: "Never",
     };
-    setApiKeys([...apiKeys, freshKey]);
+    const updated = [...apiKeys, freshKey];
+    setApiKeys(updated);
+    localStorage.setItem("dev_api_keys", JSON.stringify(updated));
     setNewKeyName("");
     setShowKeyModal(false);
     showToast(`API Key "${freshKey.name}" created!`);
@@ -231,19 +304,25 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   };
 
   const handleRevokeApiKey = (id: string) => {
-    setApiKeys(apiKeys.filter((k) => k.id !== id));
+    const updated = apiKeys.filter((k) => k.id !== id);
+    setApiKeys(updated);
+    localStorage.setItem("dev_api_keys", JSON.stringify(updated));
     showToast("API Key revoked.");
   };
 
   const handleAddIp = () => {
     if (!whitelistedIp || ipList.includes(whitelistedIp)) return;
-    setIpList([...ipList, whitelistedIp]);
+    const updated = [...ipList, whitelistedIp];
+    setIpList(updated);
+    localStorage.setItem("security_ip_list", JSON.stringify(updated));
     setWhitelistedIp("");
     showToast("IP address whitelisted.");
   };
 
   const handleRemoveIp = (ip: string) => {
-    setIpList(ipList.filter((item) => item !== ip));
+    const updated = ipList.filter((item) => item !== ip);
+    setIpList(updated);
+    localStorage.setItem("security_ip_list", JSON.stringify(updated));
     showToast("IP address removed from whitelist.");
   };
 
@@ -274,6 +353,33 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
     localStorage.setItem("profile_phone", phone);
     localStorage.setItem("profile_bio", bio);
 
+    // Save security settings
+    localStorage.setItem("security_2fa_enabled", String(twoFactorEnabled));
+    localStorage.setItem("security_2fa_method", twoFactorMethod);
+    localStorage.setItem("security_session_timeout", sessionTimeout);
+    localStorage.setItem("security_ip_list", JSON.stringify(ipList));
+    localStorage.setItem("security_sessions", JSON.stringify(sessions));
+
+    // Save notification preferences
+    localStorage.setItem("notify_email_alerts", String(emailAlerts));
+    localStorage.setItem("notify_push_alerts", String(pushAlerts));
+    localStorage.setItem("notify_sms_alerts", String(smsAlerts));
+    localStorage.setItem("notify_pnr_updates", String(pnrStatusUpdates));
+    localStorage.setItem("notify_delay_alerts", String(delayAlerts));
+    localStorage.setItem("notify_marketing_alerts", String(marketingAlerts));
+    localStorage.setItem("notify_digest_freq", digestFrequency);
+
+    // Save developer settings
+    localStorage.setItem("dev_api_keys", JSON.stringify(apiKeys));
+    localStorage.setItem("dev_webhook_url", webhookUrl);
+    localStorage.setItem("dev_webhook_events", JSON.stringify(webhookEvents));
+
+    // Save privacy settings
+    localStorage.setItem("privacy_visibility", profileVisibility);
+    localStorage.setItem("privacy_share_history", String(shareHistory));
+    localStorage.setItem("privacy_analytics_consent", String(analyticsConsent));
+    localStorage.setItem("privacy_retention", dataRetention);
+
     try {
       const res = await updateProfile({ name, email });
       if (res.error) {
@@ -284,7 +390,7 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
           onProfileUpdate(name, email);
         }
       }
-    } catch (err) {
+    } catch {
       showToast("Failed to save changes.");
     }
   };
