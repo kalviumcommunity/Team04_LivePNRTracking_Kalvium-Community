@@ -169,6 +169,7 @@ export async function getPassengersList() {
       include: {
         bookings: {
           select: {
+            id: true,
             pnr: true,
             boardingStatus: true,
             seat: true,
@@ -187,7 +188,7 @@ export async function getPassengersList() {
         return []; // Only show passengers actively monitored/having bookings
       }
       return p.bookings.map((b) => ({
-        id: p.id,
+        id: b.id,
         name: p.name || "Passenger",
         pnr: b.pnr,
         from: b.fromStation,

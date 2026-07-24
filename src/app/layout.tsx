@@ -29,7 +29,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <head>
         <Script
           id="theme-init"
           strategy="beforeInteractive"
@@ -77,6 +77,8 @@ export default function RootLayout({
             `,
           }}
         />
+      </head>
+      <body className="min-h-full flex flex-col">
         {children}
       </body>
     </html>
