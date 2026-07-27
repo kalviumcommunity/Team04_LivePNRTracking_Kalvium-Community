@@ -6,7 +6,6 @@ import {
   MapPin, 
   Calendar, 
   Users, 
-  Ticket, 
   CheckCircle2, 
   Loader2, 
   HelpCircle,
@@ -20,11 +19,41 @@ import {
   Info,
   Clock
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTranslation } from "@/lib/i18n";
+
+interface ClassItem {
+  code: string;
+  name: string;
+  status: string;
+  color: string;
+  fare: number;
+}
+
+interface TrainType {
+  name: string;
+  no: string;
+  from: string;
+  to: string;
+  dep: string;
+  arr: string;
+  duration: string;
+  days: string[];
+  classes: ClassItem[];
+}
+
+interface BookingResult {
+  pnr: string;
+  trainName: string;
+  trainNo: string;
+  dateOfJourney: string | Date;
+  fromStation: string;
+  toStation: string;
+  status: string;
+  seat: string;
+}
 
 interface TicketBookingProps {
   onBookSuccess: () => void;
@@ -37,7 +66,7 @@ interface TicketBookingProps {
     to: string;
     travelClass: string;
     passengerName: string;
-  }) => Promise<{ success?: boolean; booking?: any; error?: string }>;
+  }) => Promise<{ success?: boolean; booking?: BookingResult; error?: string }>;
 }
 
 const STATIONS = [
@@ -297,8 +326,8 @@ export function TicketBooking({ onBookSuccess, bookTicketAction }: TicketBooking
 
   // Searching status
   const [hasSearched, setHasSearched] = useState(true);
-  const [selectedTrain, setSelectedTrain] = useState<any | null>(null);
-  const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  const [selectedTrain, setSelectedTrain] = useState<TrainType | null>(null);
+  const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
 
   // Passenger form states
   const [passengerName, setPassengerName] = useState("");
@@ -308,7 +337,7 @@ export function TicketBooking({ onBookSuccess, bookTicketAction }: TicketBooking
 
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [successBooking, setSuccessBooking] = useState<any | null>(null);
+  const [successBooking, setSuccessBooking] = useState<BookingResult | null>(null);
 
   // Filter matching trains
   const matchingTrains = TRAINS.filter(
@@ -332,7 +361,7 @@ export function TicketBooking({ onBookSuccess, bookTicketAction }: TicketBooking
     setError(null);
   };
 
-  const selectTrainClass = (train: any, classItem: any) => {
+  const selectTrainClass = (train: TrainType, classItem: ClassItem) => {
     setSelectedTrain(train);
     setSelectedClass(classItem);
     setError(null);
@@ -371,7 +400,7 @@ export function TicketBooking({ onBookSuccess, bookTicketAction }: TicketBooking
       if (res.error) {
         setError(res.error);
       } else if (res.success) {
-        setSuccessBooking(res.booking);
+        setSuccessBooking(res.booking ?? null);
         onBookSuccess();
       }
     });
@@ -779,7 +808,7 @@ export function TicketBooking({ onBookSuccess, bookTicketAction }: TicketBooking
               <Card className="border border-[#c05621]/30 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-2xl shadow-lg p-5 space-y-4 animate-in fade-in slide-in-from-right-2 duration-200">
                 <div className="border-b border-slate-100 dark:border-slate-900 pb-3">
                   <span className="text-[10px] uppercase font-bold text-[#c05621] dark:text-orange-450 tracking-wider block">Selected Travel Segment</span>
-                  <div className="font-bold text-slate-850 dark:text-white text-sm mt-0.5">{selectedTrain.name} (#{selectedTrain.no})</div>
+                  <div className="font-bold text-slate-850 dark:text-white text-sm mt-0.5">{selectedTrain?.name} (#{selectedTrain?.no})</div>
                   <div className="text-xs text-slate-500 mt-0.5">
                     {fromCode} ⇆ {toCode} • Class: {selectedClass.name} ({selectedClass.code})
                   </div>

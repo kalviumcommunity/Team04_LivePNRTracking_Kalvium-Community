@@ -40,7 +40,7 @@ export async function getManifest(station: string) {
 
     return bookings.map((b) => ({
       id: b.id,
-      name: b.user?.name || "Premium Passenger",
+      name: b.passengerName || b.user?.name || "Premium Passenger",
       pnr: b.pnr,
       from: b.fromStation,
       to: b.toStation,

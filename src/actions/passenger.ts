@@ -134,6 +134,7 @@ export async function bookTicket(data: {
         status: "CNF",
         boardingStatus: "Boarding",
         seat: seatString,
+        passengerName: data.passengerName,
         userId: user.id,
       },
     });
