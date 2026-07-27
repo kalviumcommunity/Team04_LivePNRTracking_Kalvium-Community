@@ -91,6 +91,7 @@ model Booking {
   status         String
   boardingStatus String   @default("Boarding")
   seat           String   @default("A1/1")
+  passengerName  String?
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt      DateTime @default(now())

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { 
   Train, 
   BookOpen, 
@@ -43,15 +44,29 @@ interface DashboardClientProps {
       role?: string | null;
     } | null;
   } | null;
+  initialTab?: string;
 }
 
-export function DashboardClient({ session }: DashboardClientProps) {
+export function DashboardClient({ session, initialTab }: DashboardClientProps) {
+  const router = useRouter();
   const userRole = session?.user?.role || "passenger";
   
   // Set tab defaults dynamically
-  const [activeTab, setActiveTab] = useState<string>(
-    userRole === "staff" ? "manifest" : "overview"
+  const [activeTab, setRawActiveTab] = useState<string>(
+    initialTab || (userRole === "staff" ? "manifest" : "overview")
   );
+
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab);
+    setRawActiveTab(initialTab || (userRole === "staff" ? "manifest" : "overview"));
+  }
+
+  const setActiveTab = (tabId: string) => {
+    setRawActiveTab(tabId);
+    router.push(`/dashboard/${tabId}`);
+  };
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedPnr, setSelectedPnr] = useState<string | null>(null);
 
@@ -63,15 +78,18 @@ export function DashboardClient({ session }: DashboardClientProps) {
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [userName, setUserName] = useState(session?.user?.name || "Demo User");
-  const [userEmail, setUserEmail] = useState(session?.user?.email || "demo@railwaypnr.com");
-
-  useEffect(() => {
-    const savedName = localStorage.getItem("profile_name");
-    const savedEmail = localStorage.getItem("profile_email");
-    if (savedName) setUserName(savedName);
-    if (savedEmail) setUserEmail(savedEmail);
-  }, []);
+  const [userName, setUserName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("profile_name") || session?.user?.name || "Demo User";
+    }
+    return session?.user?.name || "Demo User";
+  });
+  const [userEmail, setUserEmail] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("profile_email") || session?.user?.email || "demo@railwaypnr.com";
+    }
+    return session?.user?.email || "demo@railwaypnr.com";
+  });
 
 
   // Data Loading Trigger
@@ -412,7 +430,12 @@ export function DashboardClient({ session }: DashboardClientProps) {
                   bookTicketAction={bookTicket}
                 />
               )}
-              {activeTab === "history" && <BookingHistory bookings={bookings} />}
+              {activeTab === "history" && (
+                <BookingHistory 
+                  bookings={bookings} 
+                  onCheckStatus={handleCheckStatus} 
+                />
+              )}
               {activeTab === "favorites" && (
                 <SavedFavorites 
                   favorites={favorites} 

@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
-import { DashboardClient } from "@/components/dashboard/dashboard-client";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const session = await auth();
-
-  return <DashboardClient session={session} />;
+  const user = session?.user as { role?: string } | undefined;
+  const userRole = user?.role || "passenger";
+  const defaultTab = userRole === "staff" ? "manifest" : "overview";
+  redirect(`/dashboard/${defaultTab}`);
 }

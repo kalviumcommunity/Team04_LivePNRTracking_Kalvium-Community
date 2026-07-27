@@ -177,6 +177,44 @@ export async function GET(
     let pnrRecord = PNR_DATABASE[pnr];
 
     if (!pnrRecord) {
+      // Query the database to check if a booking exists for this PNR
+      try {
+        const dbBooking = await db.booking.findUnique({
+          where: { pnr },
+          include: { user: true }
+        });
+
+        if (dbBooking) {
+          pnrRecord = {
+            pnr,
+            trainName: dbBooking.trainName,
+            trainNo: dbBooking.trainNo,
+            from: dbBooking.fromStation.split(" (")[0] || dbBooking.fromStation,
+            fromCode: dbBooking.fromStation.includes("(") ? dbBooking.fromStation.split("(")[1].replace(")", "") : "NDLS",
+            to: dbBooking.toStation.split(" (")[0] || dbBooking.toStation,
+            toCode: dbBooking.toStation.includes("(") ? dbBooking.toStation.split("(")[1].replace(")", "") : "MMCT",
+            departureTime: "21:20",
+            arrivalTime: "05:40",
+            date: dbBooking.dateOfJourney.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+            class: "AC 3 Tier (3A)",
+            chartStatus: "Chart Prepared",
+            platform: "Platform 4",
+            delayStatus: "On Time",
+            passengers: [
+              { 
+                name: dbBooking.passengerName || dbBooking.user?.name || "Passenger 1", 
+                bookingStatus: `${dbBooking.status} / ${dbBooking.seat}`, 
+                currentStatus: dbBooking.status 
+              },
+            ],
+          };
+        }
+      } catch (dbErr) {
+        console.error("Failed to query DB for booking PNR:", dbErr);
+      }
+    }
+
+    if (!pnrRecord) {
       // Dynamic generator for any valid 10-digit PNR
       pnrRecord = {
         pnr,

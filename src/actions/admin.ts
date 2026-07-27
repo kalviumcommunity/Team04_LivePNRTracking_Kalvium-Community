@@ -176,6 +176,7 @@ export async function getPassengersList() {
             fromStation: true,
             toStation: true,
             trainNo: true,
+            passengerName: true,
           },
         },
       },
@@ -189,7 +190,7 @@ export async function getPassengersList() {
       }
       return p.bookings.map((b) => ({
         id: b.id,
-        name: p.name || "Passenger",
+        name: b.passengerName || p.name || "Passenger",
         pnr: b.pnr,
         from: b.fromStation,
         to: b.toStation,
