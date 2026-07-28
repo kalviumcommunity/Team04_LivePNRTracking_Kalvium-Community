@@ -78,18 +78,19 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [userName, setUserName] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("profile_name") || session?.user?.name || "Demo User";
+  const [userName, setUserName] = useState<string>(session?.user?.name || "Demo User");
+  const [userEmail, setUserEmail] = useState<string>(session?.user?.email || "demo@railwaypnr.com");
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("profile_name");
+    const savedEmail = localStorage.getItem("profile_email");
+    if (savedName || savedEmail) {
+      setTimeout(() => {
+        if (savedName) setUserName(savedName);
+        if (savedEmail) setUserEmail(savedEmail);
+      }, 0);
     }
-    return session?.user?.name || "Demo User";
-  });
-  const [userEmail, setUserEmail] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("profile_email") || session?.user?.email || "demo@railwaypnr.com";
-    }
-    return session?.user?.email || "demo@railwaypnr.com";
-  });
+  }, []);
 
 
   // Data Loading Trigger
@@ -329,15 +330,26 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
             <Settings className="w-4 h-4" />
             {t("settings", currentLang)}
           </button>
-          <button
-            onClick={async () => {
-              await signOut({ callbackUrl: "/login" });
-            }}
-            className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-xl"
-          >
-            <LogOut className="w-4 h-4" />
-            {t("signOut", currentLang)}
-          </button>
+          {session?.user ? (
+            <button
+              onClick={async () => {
+                await signOut({ callbackUrl: "/login", redirect: true });
+                router.push("/login");
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-xl"
+            >
+              <LogOut className="w-4 h-4" />
+              {t("signOut", currentLang)}
+            </button>
+          ) : (
+            <button
+              onClick={() => router.push("/login")}
+              className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all"
+            >
+              <User className="w-4 h-4" />
+              Sign In
+            </button>
+          )}
         </div>
       </aside>
 
@@ -363,13 +375,33 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
               <Moon className="w-3.5 h-3.5 block dark:hidden text-slate-600" />
               <span className="text-[11px] font-bold">Theme</span>
             </button>
+            {session?.user ? (
+              <button
+                onClick={async () => {
+                  await signOut({ callbackUrl: "/login", redirect: true });
+                  router.push("/login");
+                }}
+                className="px-3 py-1 rounded-lg bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 hover:bg-red-100 font-semibold transition-colors flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{t("signOut", currentLang)}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="px-3.5 py-1.5 rounded-lg bg-[#c05621] hover:bg-[#a8481b] text-white font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            )}
           </div>
         </header>
 
         {/* Tab Body */}
         <main className="flex-1 p-6 lg:p-8 mt-14 lg:mt-0 max-w-5xl w-full mx-auto animate-in fade-in duration-200">
           {loading ? (
-            <div className="flex items-center justify-center min-h-[300px]">
+            <div className="flex items-center justify-center min-h-75">
               <div className="flex flex-col items-center gap-3">
                 <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600/30 border-t-amber-600" />
                 <span className="text-xs text-slate-400 font-medium">Connecting to central railway database...</span>

@@ -20,6 +20,21 @@ async function getAuthenticatedAdmin() {
   return user;
 }
 
+// Helper to authenticate staff or admin user
+async function getAuthenticatedStaffOrAdmin() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    throw new Error("Unauthorized: Please sign in.");
+  }
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user || (user.role !== "admin" && user.role !== "staff")) {
+    throw new Error("Unauthorized: Access denied.");
+  }
+  return user;
+}
+
 // 1. Get Administrative Portal Dashboard Metrics
 export async function getAdminStats() {
   try {
@@ -162,35 +177,25 @@ export async function toggleStaffStatus(id: string) {
 // 5. Manage Passengers: List passenger records
 export async function getPassengersList() {
   try {
-    await getAuthenticatedAdmin();
+    await getAuthenticatedStaffOrAdmin();
 
     const passengers = await db.user.findMany({
       where: { role: "passenger" },
       include: {
-        bookings: {
-          select: {
-            id: true,
-            pnr: true,
-            boardingStatus: true,
-            seat: true,
-            fromStation: true,
-            toStation: true,
-            trainNo: true,
-            passengerName: true,
-          },
-        },
+        bookings: true,
       },
       orderBy: { createdAt: "desc" },
     });
 
     // Map to layout format
     return passengers.flatMap((p) => {
-      if (p.bookings.length === 0) {
+      const userBookings = p.bookings || [];
+      if (userBookings.length === 0) {
         return []; // Only show passengers actively monitored/having bookings
       }
-      return p.bookings.map((b) => ({
+      return userBookings.map((b) => ({
         id: b.id,
-        name: b.passengerName || p.name || "Passenger",
+        name: (b as { passengerName?: string | null }).passengerName || p.name || "Passenger",
         pnr: b.pnr,
         from: b.fromStation,
         to: b.toStation,
