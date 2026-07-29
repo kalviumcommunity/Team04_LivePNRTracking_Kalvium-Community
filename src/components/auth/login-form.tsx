@@ -42,8 +42,8 @@ export function LoginForm() {
     },
   });
 
-  const handleAutofill = () => {
-    setValue("email", "demo@railwaypnr.com", { shouldValidate: true });
+  const handleAutofill = (email: string) => {
+    setValue("email", email, { shouldValidate: true });
     setValue("password", "password123", { shouldValidate: true });
   };
 
@@ -228,24 +228,42 @@ export function LoginForm() {
           </Button>
 
           {/* Helper credentials note */}
-          <div className="w-full mt-2 p-3 rounded-lg border border-[#eaddcd] dark:border-slate-800/80 bg-amber-50/20 dark:bg-slate-900/20 text-xs text-amber-900 dark:text-amber-400 flex items-start justify-between gap-2">
+          <div className="w-full mt-2 p-3 rounded-lg border border-[#eaddcd] dark:border-slate-800/80 bg-amber-50/20 dark:bg-slate-900/20 text-xs text-amber-900 dark:text-amber-400 space-y-2">
             <div className="flex gap-2">
               <HelpCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-650" />
               <div className="space-y-1">
-                <span className="font-semibold block">{t("loginDemoAccount")}</span>
-                <p>Email: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">demo@railwaypnr.com</code></p>
-                <p>Password: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">password123</code></p>
+                <span className="font-semibold block">{t("loginDemoAccount")} (Password: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">password123</code>)</span>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAutofill}
-              className="text-xs h-7 px-2 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400"
-            >
-              {t("loginAutofill")}
-            </Button>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleAutofill("demo@railwaypnr.com")}
+                className="text-xs h-8 px-1 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-medium"
+              >
+                Passenger
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleAutofill("staff@railwaypnr.com")}
+                className="text-xs h-8 px-1 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-medium"
+              >
+                Staff
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleAutofill("admin@railwaypnr.com")}
+                className="text-xs h-8 px-1 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-medium"
+              >
+                Admin
+              </Button>
+            </div>
           </div>
           
           <p className="text-center text-xs text-slate-500 dark:text-slate-400">
