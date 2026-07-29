@@ -24,6 +24,9 @@ model User {
   bookings      Booking[]
   notifications Notification[]
   auditLogs     AuditLog[]
+  incidents     Incident[]
+  attendance    Attendance[]
+  shifts        DutyShift[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -94,6 +97,9 @@ model Booking {
   passengerName  String?
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPreference String?
+  mealStatus     String   @default("Pending")
+  luggages       Luggage[]
   createdAt      DateTime @default(now())
 }
 
@@ -124,4 +130,52 @@ model PasswordResetToken {
 
   @@unique([email, token])
 }
+
+model Incident {
+  id          String   @id @default(cuid())
+  trainNo     String
+  coach       String
+  seatNo      String?
+  category    String   // AC, Water, Medical, Cleanliness, Other
+  description String
+  status      String   @default("Reported") // Reported, In Progress, Resolved
+  severity    String   @default("Medium")   // Low, Medium, High, Critical
+  reportedBy  String
+  user        User     @relation(fields: [reportedBy], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkIn    DateTime @default(now())
+  checkOut   DateTime?
+  latitude   Float?
+  longitude  Float?
+  station    String
+}
+
+model DutyShift {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainNo    String?
+  station    String
+  date       DateTime
+  shiftType  String   // Morning, Evening, Night
+  status     String   @default("Scheduled") // Scheduled, Completed, Missed
+}
+
+model Luggage {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  barcode     String   @unique
+  weight      Float
+  description String?
+  status      String   @default("Registered") // Registered, Loaded, Unloaded, Delivered
+  updatedAt   DateTime @updatedAt
+}
+
 

@@ -20,7 +20,10 @@ import {
   LayoutDashboard,
   Sun,
   Moon,
-  Ticket
+  Ticket,
+  Coffee,
+  Calendar,
+  Package
 } from "lucide-react";
 import { applyTheme } from "@/lib/theme-utils";
 import { t, getSavedLanguage, LanguageCode } from "@/lib/i18n";
@@ -146,6 +149,9 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
       return [
         { id: "manifest", name: t("staffPortal", currentLang), icon: Clipboard },
         { id: "ops", name: "Train Operations", icon: Volume2 },
+        { id: "catering", name: "Catering Service", icon: Coffee },
+        { id: "attendance", name: "Duty Roster", icon: Calendar },
+        { id: "luggage", name: "Luggage Tracking", icon: Package },
         { id: "pnr", name: t("livePnrTracker", currentLang), icon: Search },
       ];
     }
@@ -498,11 +504,11 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
           {/* Staff Views */}
           {userRole === "staff" && (
             <>
-              {(activeTab === "manifest" || activeTab === "ops") && (
+              {(activeTab === "manifest" || activeTab === "ops" || activeTab === "catering" || activeTab === "attendance" || activeTab === "luggage") && (
                 <StaffPortal 
                   passengers={passengers} 
                   onUpdatePassengerStatus={handleUpdatePassengerStatus} 
-                  activeSubTab={activeTab as "manifest" | "ops"}
+                  activeSubTab={activeTab}
                   setActiveSubTab={(tab) => setActiveTab(tab)}
                 />
               )}
