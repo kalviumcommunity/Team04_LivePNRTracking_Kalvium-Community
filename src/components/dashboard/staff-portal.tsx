@@ -58,11 +58,11 @@ export interface WaitlistPassenger {
   status?: string;
 }
 
-export interface IncidentRecord {
+export interface IncidentItem {
   id: string;
   trainNo: string;
   coach: string;
-  seatNo?: string;
+  seatNo?: string | null;
   category: string;
   description: string;
   status: string;
@@ -71,7 +71,7 @@ export interface IncidentRecord {
   createdAt?: string | Date;
 }
 
-export interface ShiftRecord {
+export interface ShiftItem {
   id: string;
   station: string;
   trainNo?: string | null;
@@ -80,7 +80,7 @@ export interface ShiftRecord {
   status?: string;
 }
 
-export interface LuggageRecord {
+export interface LuggageItem {
   id: string;
   bookingId: string;
   barcode: string;
@@ -101,14 +101,14 @@ interface StaffPortalProps {
 export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerStatus, activeSubTab, setActiveSubTab }: StaffPortalProps) {
   const { t } = useTranslation();
   const [passengers, setPassengers] = useState<ManifestPassenger[]>(initialPassengers);
+  const [prevInitial, setPrevInitial] = useState(initialPassengers);
+
+  if (initialPassengers !== prevInitial) {
+    setPrevInitial(initialPassengers);
+    setPassengers(initialPassengers);
+  }
+
   const [selectedStation, setSelectedStation] = useState("NDLS");
-  
-  // Station manifest reload trigger
-  useEffect(() => {
-    setTimeout(() => {
-      setPassengers(initialPassengers);
-    }, 0);
-  }, [initialPassengers]);
 
   // General Notification Broadcast state
   const [alertText, setAlertText] = useState("");
@@ -129,7 +129,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   const [updatingMealId, setUpdatingMealId] = useState<string | null>(null);
 
   // Feature 3: Incident Reporting State
-  const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
+  const [incidents, setIncidents] = useState<IncidentItem[]>([]);
   const [incidentLoading, setIncidentLoading] = useState(false);
   const [incidentForm, setIncidentForm] = useState({
     trainNo: "12425",
@@ -142,13 +142,13 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   const [incidentStatusMsg, setIncidentStatusMsg] = useState("");
 
   // Feature 4: Attendance & Roster State
-  const [shifts, setShifts] = useState<ShiftRecord[]>([]);
-  const [attendance, setAttendance] = useState<{ checkIn?: string | Date; station?: string } | null>(null);
+  const [shifts, setShifts] = useState<ShiftItem[]>([]);
+  const [attendance, setAttendance] = useState<{ id?: string; checkIn?: string | Date; station?: string } | null>(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Feature 5: Luggage Tracking State
-  const [luggageList, setLuggageList] = useState<LuggageRecord[]>([]);
+  const [luggageList, setLuggageList] = useState<LuggageItem[]>([]);
   const [luggageLoading, setLuggageLoading] = useState(false);
   const [luggageForm, setLuggageForm] = useState({
     bookingId: "",
@@ -159,38 +159,38 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   const [luggageStatusMsg, setLuggageStatusMsg] = useState("");
 
   // --- Feature 3: Incident Functions ---
-  const fetchIncidents = async (trainNo: string) => {
+  async function fetchIncidents(trainNo: string) {
     setIncidentLoading(true);
     const data = await getIncidents(trainNo);
     setIncidents(data);
     setIncidentLoading(false);
-  };
+  }
 
   // --- Feature 4: Attendance & Roster ---
-  const fetchDutyRosterAndAttendance = async () => {
+  async function fetchDutyRosterAndAttendance() {
     setAttendanceLoading(true);
     const roster = await getDutyShifts();
     setShifts(roster);
     setAttendanceLoading(false);
-  };
+  }
 
   // --- Feature 5: Luggage Functions ---
-  const fetchLuggage = async () => {
+  async function fetchLuggage() {
     setLuggageLoading(true);
     const list = await getLuggageList();
     setLuggageList(list);
     setLuggageLoading(false);
-  };
+  }
 
   // Fetch contextual tab data on sub-tab switch
   useEffect(() => {
     setTimeout(() => {
       if (activeSubTab === "ops") {
-        fetchIncidents("12425");
+        void fetchIncidents("12425");
       } else if (activeSubTab === "attendance") {
-        fetchDutyRosterAndAttendance();
+        void fetchDutyRosterAndAttendance();
       } else if (activeSubTab === "luggage") {
-        fetchLuggage();
+        void fetchLuggage();
       }
     }, 0);
   }, [activeSubTab]);
