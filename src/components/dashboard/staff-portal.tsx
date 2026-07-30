@@ -14,7 +14,6 @@ import {
   MapPin, 
   Clock, 
   AlertOctagon, 
-  Plus, 
   Loader2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,8 +32,7 @@ import {
   registerLuggage, 
   updateLuggageStatus,
   getLuggageList,
-  broadcastOpsAlert,
-  updatePassengerBoarding
+  broadcastOpsAlert
 } from "@/actions/staff";
 
 export interface ManifestPassenger {
@@ -48,6 +46,49 @@ export interface ManifestPassenger {
   seat: string;
   mealPreference?: string | null;
   mealStatus?: string;
+}
+
+export interface WaitlistPassenger {
+  id: string;
+  pnr: string;
+  name: string;
+  from: string;
+  to: string;
+  seat?: string;
+  status?: string;
+}
+
+export interface IncidentRecord {
+  id: string;
+  trainNo: string;
+  coach: string;
+  seatNo?: string;
+  category: string;
+  description: string;
+  status: string;
+  severity: string;
+  reporterName?: string;
+  createdAt?: string | Date;
+}
+
+export interface ShiftRecord {
+  id: string;
+  station: string;
+  trainNo?: string | null;
+  date?: string | Date;
+  shiftType?: string;
+  status?: string;
+}
+
+export interface LuggageRecord {
+  id: string;
+  bookingId: string;
+  barcode: string;
+  weight: number;
+  description?: string | null;
+  status: string;
+  passengerName?: string;
+  pnr?: string;
 }
 
 interface StaffPortalProps {
@@ -64,7 +105,9 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   
   // Station manifest reload trigger
   useEffect(() => {
-    setPassengers(initialPassengers);
+    setTimeout(() => {
+      setPassengers(initialPassengers);
+    }, 0);
   }, [initialPassengers]);
 
   // General Notification Broadcast state
@@ -78,7 +121,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
 
   // Feature 1: Seat Re-allocation State
   const [selectedNoShow, setSelectedNoShow] = useState<ManifestPassenger | null>(null);
-  const [wlPassengers, setWlPassengers] = useState<any[]>([]);
+  const [wlPassengers, setWlPassengers] = useState<WaitlistPassenger[]>([]);
   const [loadingWl, setLoadingWl] = useState(false);
   const [reallocatingId, setReallocatingId] = useState<string | null>(null);
 
@@ -86,7 +129,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   const [updatingMealId, setUpdatingMealId] = useState<string | null>(null);
 
   // Feature 3: Incident Reporting State
-  const [incidents, setIncidents] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
   const [incidentLoading, setIncidentLoading] = useState(false);
   const [incidentForm, setIncidentForm] = useState({
     trainNo: "12425",
@@ -99,13 +142,13 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   const [incidentStatusMsg, setIncidentStatusMsg] = useState("");
 
   // Feature 4: Attendance & Roster State
-  const [shifts, setShifts] = useState<any[]>([]);
-  const [attendance, setAttendance] = useState<any>(null);
+  const [shifts, setShifts] = useState<ShiftRecord[]>([]);
+  const [attendance, setAttendance] = useState<{ checkIn?: string | Date; station?: string } | null>(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Feature 5: Luggage Tracking State
-  const [luggageList, setLuggageList] = useState<any[]>([]);
+  const [luggageList, setLuggageList] = useState<LuggageRecord[]>([]);
   const [luggageLoading, setLuggageLoading] = useState(false);
   const [luggageForm, setLuggageForm] = useState({
     bookingId: "",
@@ -115,15 +158,41 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   });
   const [luggageStatusMsg, setLuggageStatusMsg] = useState("");
 
+  // --- Feature 3: Incident Functions ---
+  const fetchIncidents = async (trainNo: string) => {
+    setIncidentLoading(true);
+    const data = await getIncidents(trainNo);
+    setIncidents(data);
+    setIncidentLoading(false);
+  };
+
+  // --- Feature 4: Attendance & Roster ---
+  const fetchDutyRosterAndAttendance = async () => {
+    setAttendanceLoading(true);
+    const roster = await getDutyShifts();
+    setShifts(roster);
+    setAttendanceLoading(false);
+  };
+
+  // --- Feature 5: Luggage Functions ---
+  const fetchLuggage = async () => {
+    setLuggageLoading(true);
+    const list = await getLuggageList();
+    setLuggageList(list);
+    setLuggageLoading(false);
+  };
+
   // Fetch contextual tab data on sub-tab switch
   useEffect(() => {
-    if (activeSubTab === "ops") {
-      fetchIncidents("12425");
-    } else if (activeSubTab === "attendance") {
-      fetchDutyRosterAndAttendance();
-    } else if (activeSubTab === "luggage") {
-      fetchLuggage();
-    }
+    setTimeout(() => {
+      if (activeSubTab === "ops") {
+        fetchIncidents("12425");
+      } else if (activeSubTab === "attendance") {
+        fetchDutyRosterAndAttendance();
+      } else if (activeSubTab === "luggage") {
+        fetchLuggage();
+      }
+    }, 0);
   }, [activeSubTab]);
 
   // Broadcaster wrapper
@@ -206,13 +275,6 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   };
 
   // --- Feature 3: Incident Functions ---
-  const fetchIncidents = async (trainNo: string) => {
-    setIncidentLoading(true);
-    const data = await getIncidents(trainNo);
-    setIncidents(data);
-    setIncidentLoading(false);
-  };
-
   const handleIncidentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!incidentForm.coach || !incidentForm.description) {
@@ -233,13 +295,6 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   };
 
   // --- Feature 4: Attendance & Roster ---
-  const fetchDutyRosterAndAttendance = async () => {
-    setAttendanceLoading(true);
-    const roster = await getDutyShifts();
-    setShifts(roster);
-    setAttendanceLoading(false);
-  };
-
   const handleCheckIn = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
@@ -288,12 +343,6 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   };
 
   // --- Feature 5: Luggage Functions ---
-  const fetchLuggage = async () => {
-    setLuggageLoading(true);
-    const list = await getLuggageList();
-    setLuggageList(list);
-    setLuggageLoading(false);
-  };
 
   const handleLuggageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -982,7 +1031,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                       <div>
                         <span className="font-bold text-slate-800 dark:text-slate-100">{s.station} Station</span>
                         <div className="text-[10px] text-slate-450 mt-0.5">
-                          Date: {new Date(s.date).toLocaleDateString()} | Shift: <span className="font-medium">{s.shiftType}</span>
+                          Date: {s.date ? new Date(s.date).toLocaleDateString() : "Today"} | Shift: <span className="font-medium">{s.shiftType || "Morning"}</span>
                         </div>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
