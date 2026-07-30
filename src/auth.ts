@@ -37,8 +37,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // ── Demo / seed accounts (hardcoded check for testing & staging) ──
         if (password === "password123") {
           // Mock passengers
-          if (email === "demo@railwaypnr.com" || email === "passenger@railwaypnr.com") {
-            return { id: "1", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger" };
+          if (email === "demo@railwaypnr.com") {
+            return { id: "1", name: "Demo User", email: "demo@railwaypnr.com", role: "passenger" };
+          }
+          if (email === "passenger@railwaypnr.com") {
+            return { id: "4", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger" };
           }
           // Mock staff
           if (email === "staff@railwaypnr.com") {
