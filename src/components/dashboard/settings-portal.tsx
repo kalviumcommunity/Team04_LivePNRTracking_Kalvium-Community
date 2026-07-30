@@ -156,44 +156,46 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   const [analyticsConsent, setAnalyticsConsent] = useState(true);
   const [dataRetention, setDataRetention] = useState("90");
 
+  const userKey = user?.email || "default";
+
   useEffect(() => {
-    const savedName = localStorage.getItem("profile_name");
-    const savedUsername = localStorage.getItem("profile_username");
-    const savedEmail = localStorage.getItem("profile_email");
-    const savedPhone = localStorage.getItem("profile_phone");
-    const savedBio = localStorage.getItem("profile_bio");
+    const savedName = localStorage.getItem(`profile_name_${userKey}`);
+    const savedUsername = localStorage.getItem(`profile_username_${userKey}`);
+    const savedEmail = localStorage.getItem(`profile_email_${userKey}`);
+    const savedPhone = localStorage.getItem(`profile_phone_${userKey}`);
+    const savedBio = localStorage.getItem(`profile_bio_${userKey}`);
 
     // 2FA & Security
-    const saved2FaEnabled = localStorage.getItem("security_2fa_enabled");
-    const saved2FaMethod = localStorage.getItem("security_2fa_method");
-    const savedSessionTimeout = localStorage.getItem("security_session_timeout");
-    const savedIpList = localStorage.getItem("security_ip_list");
-    const savedSessions = localStorage.getItem("security_sessions");
+    const saved2FaEnabled = localStorage.getItem(`security_2fa_enabled_${userKey}`);
+    const saved2FaMethod = localStorage.getItem(`security_2fa_method_${userKey}`);
+    const savedSessionTimeout = localStorage.getItem(`security_session_timeout_${userKey}`);
+    const savedIpList = localStorage.getItem(`security_ip_list_${userKey}`);
+    const savedSessions = localStorage.getItem(`security_sessions_${userKey}`);
 
     // Notifications
-    const savedEmailAlerts = localStorage.getItem("notify_email_alerts");
-    const savedPushAlerts = localStorage.getItem("notify_push_alerts");
-    const savedSmsAlerts = localStorage.getItem("notify_sms_alerts");
-    const savedPnrUpdates = localStorage.getItem("notify_pnr_updates");
-    const savedDelayAlerts = localStorage.getItem("notify_delay_alerts");
-    const savedMarketingAlerts = localStorage.getItem("notify_marketing_alerts");
-    const savedDigestFreq = localStorage.getItem("notify_digest_freq");
+    const savedEmailAlerts = localStorage.getItem(`notify_email_alerts_${userKey}`);
+    const savedPushAlerts = localStorage.getItem(`notify_push_alerts_${userKey}`);
+    const savedSmsAlerts = localStorage.getItem(`notify_sms_alerts_${userKey}`);
+    const savedPnrUpdates = localStorage.getItem(`notify_pnr_updates_${userKey}`);
+    const savedDelayAlerts = localStorage.getItem(`notify_delay_alerts_${userKey}`);
+    const savedMarketingAlerts = localStorage.getItem(`notify_marketing_alerts_${userKey}`);
+    const savedDigestFreq = localStorage.getItem(`notify_digest_freq_${userKey}`);
 
     // Developer API
-    const savedApiKeys = localStorage.getItem("dev_api_keys");
-    const savedWebhookUrl = localStorage.getItem("dev_webhook_url");
-    const savedWebhookEvents = localStorage.getItem("dev_webhook_events");
+    const savedApiKeys = localStorage.getItem(`dev_api_keys_${userKey}`);
+    const savedWebhookUrl = localStorage.getItem(`dev_webhook_url_${userKey}`);
+    const savedWebhookEvents = localStorage.getItem(`dev_webhook_events_${userKey}`);
 
     // Privacy
-    const savedVisibility = localStorage.getItem("privacy_visibility");
-    const savedShareHistory = localStorage.getItem("privacy_share_history");
-    const savedAnalyticsConsent = localStorage.getItem("privacy_analytics_consent");
-    const savedRetention = localStorage.getItem("privacy_retention");
+    const savedVisibility = localStorage.getItem(`privacy_visibility_${userKey}`);
+    const savedShareHistory = localStorage.getItem(`privacy_share_history_${userKey}`);
+    const savedAnalyticsConsent = localStorage.getItem(`privacy_analytics_consent_${userKey}`);
+    const savedRetention = localStorage.getItem(`privacy_retention_${userKey}`);
 
     setTimeout(() => {
-      if (savedName) setName(savedName);
+      setName(savedName || user?.name || "User");
       if (savedUsername) setUsername(savedUsername);
-      if (savedEmail) setEmail(savedEmail);
+      setEmail(savedEmail || user?.email || "");
       if (savedPhone) setPhone(savedPhone);
       if (savedBio) setBio(savedBio);
 
@@ -220,7 +222,7 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
       if (savedAnalyticsConsent !== null) setAnalyticsConsent(savedAnalyticsConsent === "true");
       if (savedRetention) setDataRetention(savedRetention);
     }, 0);
-  }, []);
+  }, [userKey, user?.name, user?.email]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -347,38 +349,38 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   };
 
   const handleSaveChanges = async () => {
-    localStorage.setItem("profile_name", name);
-    localStorage.setItem("profile_username", username);
-    localStorage.setItem("profile_email", email);
-    localStorage.setItem("profile_phone", phone);
-    localStorage.setItem("profile_bio", bio);
+    localStorage.setItem(`profile_name_${userKey}`, name);
+    localStorage.setItem(`profile_username_${userKey}`, username);
+    localStorage.setItem(`profile_email_${userKey}`, email);
+    localStorage.setItem(`profile_phone_${userKey}`, phone);
+    localStorage.setItem(`profile_bio_${userKey}`, bio);
 
     // Save security settings
-    localStorage.setItem("security_2fa_enabled", String(twoFactorEnabled));
-    localStorage.setItem("security_2fa_method", twoFactorMethod);
-    localStorage.setItem("security_session_timeout", sessionTimeout);
-    localStorage.setItem("security_ip_list", JSON.stringify(ipList));
-    localStorage.setItem("security_sessions", JSON.stringify(sessions));
+    localStorage.setItem(`security_2fa_enabled_${userKey}`, String(twoFactorEnabled));
+    localStorage.setItem(`security_2fa_method_${userKey}`, twoFactorMethod);
+    localStorage.setItem(`security_session_timeout_${userKey}`, sessionTimeout);
+    localStorage.setItem(`security_ip_list_${userKey}`, JSON.stringify(ipList));
+    localStorage.setItem(`security_sessions_${userKey}`, JSON.stringify(sessions));
 
     // Save notification preferences
-    localStorage.setItem("notify_email_alerts", String(emailAlerts));
-    localStorage.setItem("notify_push_alerts", String(pushAlerts));
-    localStorage.setItem("notify_sms_alerts", String(smsAlerts));
-    localStorage.setItem("notify_pnr_updates", String(pnrStatusUpdates));
-    localStorage.setItem("notify_delay_alerts", String(delayAlerts));
-    localStorage.setItem("notify_marketing_alerts", String(marketingAlerts));
-    localStorage.setItem("notify_digest_freq", digestFrequency);
+    localStorage.setItem(`notify_email_alerts_${userKey}`, String(emailAlerts));
+    localStorage.setItem(`notify_push_alerts_${userKey}`, String(pushAlerts));
+    localStorage.setItem(`notify_sms_alerts_${userKey}`, String(smsAlerts));
+    localStorage.setItem(`notify_pnr_updates_${userKey}`, String(pnrStatusUpdates));
+    localStorage.setItem(`notify_delay_alerts_${userKey}`, String(delayAlerts));
+    localStorage.setItem(`notify_marketing_alerts_${userKey}`, String(marketingAlerts));
+    localStorage.setItem(`notify_digest_freq_${userKey}`, digestFrequency);
 
     // Save developer settings
-    localStorage.setItem("dev_api_keys", JSON.stringify(apiKeys));
-    localStorage.setItem("dev_webhook_url", webhookUrl);
-    localStorage.setItem("dev_webhook_events", JSON.stringify(webhookEvents));
+    localStorage.setItem(`dev_api_keys_${userKey}`, JSON.stringify(apiKeys));
+    localStorage.setItem(`dev_webhook_url_${userKey}`, webhookUrl);
+    localStorage.setItem(`dev_webhook_events_${userKey}`, JSON.stringify(webhookEvents));
 
     // Save privacy settings
-    localStorage.setItem("privacy_visibility", profileVisibility);
-    localStorage.setItem("privacy_share_history", String(shareHistory));
-    localStorage.setItem("privacy_analytics_consent", String(analyticsConsent));
-    localStorage.setItem("privacy_retention", dataRetention);
+    localStorage.setItem(`privacy_visibility_${userKey}`, profileVisibility);
+    localStorage.setItem(`privacy_share_history_${userKey}`, String(shareHistory));
+    localStorage.setItem(`privacy_analytics_consent_${userKey}`, String(analyticsConsent));
+    localStorage.setItem(`privacy_retention_${userKey}`, dataRetention);
 
     try {
       const res = await updateProfile({ name, email });

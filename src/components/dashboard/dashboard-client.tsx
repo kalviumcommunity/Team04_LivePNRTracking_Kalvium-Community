@@ -85,15 +85,17 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [userEmail, setUserEmail] = useState<string>(session?.user?.email || "demo@railwaypnr.com");
 
   useEffect(() => {
-    const savedName = localStorage.getItem("profile_name");
-    const savedEmail = localStorage.getItem("profile_email");
-    if (savedName || savedEmail) {
-      setTimeout(() => {
-        if (savedName) setUserName(savedName);
-        if (savedEmail) setUserEmail(savedEmail);
-      }, 0);
+    const emailKey = session?.user?.email;
+    if (emailKey) {
+      const savedName = localStorage.getItem(`profile_name_${emailKey}`);
+      const savedEmail = localStorage.getItem(`profile_email_${emailKey}`);
+      setUserName(savedName || session?.user?.name || "Demo User");
+      setUserEmail(savedEmail || session?.user?.email || "demo@railwaypnr.com");
+    } else {
+      setUserName(session?.user?.name || "Demo User");
+      setUserEmail(session?.user?.email || "demo@railwaypnr.com");
     }
-  }, []);
+  }, [session?.user?.email, session?.user?.name]);
 
 
   // Data Loading Trigger
