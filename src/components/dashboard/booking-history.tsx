@@ -118,7 +118,7 @@ export function BookingHistory({ bookings, onCheckStatus }: BookingHistoryProps)
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {/* Total Bookings Card */}
         <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-100 dark:hover:shadow-none group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform duration-300 group-hover:scale-110" />
+          <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform duration-300 group-hover:scale-110" />
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{t("totalBookings")}</span>
@@ -136,7 +136,7 @@ export function BookingHistory({ bookings, onCheckStatus }: BookingHistoryProps)
 
         {/* Confirmed / Active Card */}
         <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-100 dark:hover:shadow-none group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform duration-300 group-hover:scale-110" />
+          <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-bl from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform duration-300 group-hover:scale-110" />
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{t("activeUpcoming")}</span>
@@ -156,7 +156,7 @@ export function BookingHistory({ bookings, onCheckStatus }: BookingHistoryProps)
 
         {/* Cancelled Journeys Card */}
         <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl p-5 transition-all duration-300 hover:shadow-lg hover:shadow-slate-100 dark:hover:shadow-none group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-rose-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform duration-300 group-hover:scale-110" />
+          <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-bl from-rose-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform duration-300 group-hover:scale-110" />
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{t("cancelledJourneys")}</span>
@@ -266,7 +266,7 @@ export function BookingHistory({ bookings, onCheckStatus }: BookingHistoryProps)
                           <span className="text-amber-700 dark:text-amber-500 font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/30">
                             {booking.trainNo}
                           </span>
-                          <span className="truncate max-w-[180px]">{booking.trainName}</span>
+                          <span className="truncate max-w-45">{booking.trainName}</span>
                         </div>
                         <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
@@ -619,7 +619,7 @@ export function BookingHistory({ bookings, onCheckStatus }: BookingHistoryProps)
       {/* 24/7 Chat Support Modal */}
       {isChatOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col h-[500px] animate-in zoom-in-95 duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col h-125 animate-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="bg-[#FAF7F2] dark:bg-slate-950 p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
