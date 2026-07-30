@@ -5,12 +5,13 @@ import { authConfig } from "@/auth.config";
 // This allows authentication verification on request routing before reaching page renders.
 const { auth } = NextAuth(authConfig);
 
-// Export the auth function as 'proxy' to match middleware middleware requirements/imports.
+// Export the auth function as 'proxy' — Next.js 16 uses this as the middleware entrypoint.
 export const proxy = auth;
 
 // Config defines which paths are intercepted by this middleware.
+// Next.js 16+ uses proxy.ts (not middleware.ts) as the middleware file convention.
 export const config = {
-  // Matches all request paths except for internal API routes, static assets, images, and favicon.
+  // Match all paths except Next.js internals, static assets, and favicon.
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
 
