@@ -81,23 +81,20 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [userName, setUserName] = useState<string>(session?.user?.name || "Demo User");
-  const [userEmail, setUserEmail] = useState<string>(session?.user?.email || "demo@railwaypnr.com");
-
-  useEffect(() => {
-    const emailKey = session?.user?.email;
-    const nextName = emailKey
-      ? localStorage.getItem(`profile_name_${emailKey}`) || session?.user?.name || "Demo User"
-      : session?.user?.name || "Demo User";
-    const nextEmail = emailKey
-      ? localStorage.getItem(`profile_email_${emailKey}`) || session?.user?.email || "demo@railwaypnr.com"
-      : session?.user?.email || "demo@railwaypnr.com";
-
-    setTimeout(() => {
-      setUserName(nextName);
-      setUserEmail(nextEmail);
-    }, 0);
-  }, [session?.user?.email, session?.user?.name]);
+  const [userName, setUserName] = useState<string>(() => {
+    if (typeof window !== "undefined" && session?.user?.email) {
+      const savedName = localStorage.getItem(`profile_name_${session.user.email}`);
+      if (savedName) return savedName;
+    }
+    return session?.user?.name || "Demo User";
+  });
+  const [userEmail, setUserEmail] = useState<string>(() => {
+    if (typeof window !== "undefined" && session?.user?.email) {
+      const savedEmail = localStorage.getItem(`profile_email_${session.user.email}`);
+      if (savedEmail) return savedEmail;
+    }
+    return session?.user?.email || "demo@railwaypnr.com";
+  });
 
 
   // Data Loading Trigger
