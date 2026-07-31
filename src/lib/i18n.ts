@@ -35,6 +35,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     bookingHistory: "Booking History",
     savedFavorites: "Saved Favorites",
     staffPortal: "Staff Manifest Portal",
+    trainPassengers: "Train Passengers",
     adminPortal: "Admin System Control",
     settings: "Settings",
     signOut: "Sign out",
