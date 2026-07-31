@@ -92,6 +92,11 @@ export async function getBookings() {
       status: b.status as "CNF" | "WL" | "CAN",
       statusText: b.status === "CNF" ? "Confirmed" : b.status === "WL" ? "Waitlisted" : "Cancelled",
       fare: b.trainNo === "12425" ? "₹2,120" : b.trainNo === "12004" ? "₹515" : "₹720",
+      // Extra fields for staff portal (luggage registration, boarding display)
+      fromStation: b.fromStation,
+      toStation: b.toStation,
+      seat: b.seat || "",
+      boardingStatus: b.boardingStatus,
     }));
   } catch (error) {
     console.error("[GET_BOOKINGS]", error);

@@ -37,7 +37,7 @@ import { DashboardOverview } from "./dashboard-overview";
 import { TicketBooking } from "./ticket-booking";
 import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite } from "@/actions/passenger";
 import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus } from "@/actions/admin";
-import { updatePassengerBoarding } from "@/actions/staff";
+import { updatePassengerBoarding, getManifest } from "@/actions/staff";
 
 interface DashboardClientProps {
   session: {
@@ -114,10 +114,10 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
         const pList = await getPassengersList();
         setPassengers(pList);
       } else if (userRole === "staff") {
-        // Staff manifests are loaded per-station inside the StaffPortal,
-        // but we can load all passengers as a fallback manifest list
-        const pList = await getPassengersList();
-        setPassengers(pList);
+        // Load manifest for the default station (NDLS). Staff portal self-manages
+        // station switching internally via getManifest() calls inside StaffPortal.
+        const manifestPassengers = await getManifest("NDLS");
+        setPassengers(manifestPassengers);
       }
     } catch (err) {
       console.error("Error loading portal data:", err);
@@ -216,7 +216,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     if (res.success) {
       await loadPortalData();
     } else {
-      alert("Failed to update boarding status.");
+      alert(res.error || "Failed to update boarding status.");
     }
   };
 
