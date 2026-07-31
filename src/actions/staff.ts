@@ -483,3 +483,51 @@ export async function getLuggageList() {
   }
 }
 
+export async function getUniqueTrains() {
+  try {
+    await getAuthenticatedStaff();
+    const bookings = await db.booking.findMany({
+      select: {
+        trainNo: true,
+        trainName: true,
+      },
+      distinct: ["trainNo"],
+    });
+    return bookings;
+  } catch (error) {
+    console.error("[GET_UNIQUE_TRAINS]", error);
+    return [];
+  }
+}
+
+export async function getTrainPassengers(trainNo: string) {
+  try {
+    await getAuthenticatedStaff();
+    const bookings = await db.booking.findMany({
+      where: { trainNo },
+      include: {
+        user: {
+          select: { name: true },
+        },
+      },
+      orderBy: { seat: "asc" },
+    });
+    return bookings.map((b) => ({
+      id: b.id,
+      name: b.passengerName || b.user?.name || "Premium Passenger",
+      pnr: b.pnr,
+      from: b.fromStation,
+      to: b.toStation,
+      trainNo: b.trainNo,
+      status: b.boardingStatus as "Boarding" | "Checked In" | "On-Board" | "No Show",
+      seat: b.seat || "",
+      mealPreference: b.mealPreference,
+      mealStatus: b.mealStatus,
+    }));
+  } catch (error) {
+    console.error("[GET_TRAIN_PASSENGERS]", error);
+    return [];
+  }
+}
+
+

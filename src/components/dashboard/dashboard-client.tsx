@@ -149,6 +149,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     if (userRole === "staff") {
       return [
         { id: "manifest", name: t("staffPortal", currentLang), icon: Clipboard },
+        { id: "trainPassengers", name: t("trainPassengers", currentLang), icon: Train },
         { id: "ops", name: "Train Operations", icon: Volume2 },
         { id: "catering", name: "Catering Service", icon: Coffee },
         { id: "attendance", name: "Duty Roster", icon: Calendar },
@@ -505,7 +506,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
           {/* Staff Views */}
           {userRole === "staff" && (
             <>
-              {(activeTab === "manifest" || activeTab === "ops" || activeTab === "catering" || activeTab === "attendance" || activeTab === "luggage") && (
+              {(activeTab === "manifest" || activeTab === "trainPassengers" || activeTab === "ops" || activeTab === "catering" || activeTab === "attendance" || activeTab === "luggage") && (
                 <StaffPortal 
                   passengers={passengers} 
                   onUpdatePassengerStatus={handleUpdatePassengerStatus} 
