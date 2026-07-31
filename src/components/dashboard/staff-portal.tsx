@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  AlertTriangle, 
-  Send, 
-  Check, 
-  RefreshCw, 
-  Volume2, 
-  Coffee, 
-  Calendar, 
-  Package, 
-  UserCheck, 
-  MapPin, 
-  Clock, 
-  AlertOctagon, 
+import {
+  AlertTriangle,
+  Send,
+  Check,
+  RefreshCw,
+  Volume2,
+  Coffee,
+  Calendar,
+  Package,
+  UserCheck,
+  MapPin,
+  Clock,
+  AlertOctagon,
   Loader2,
   Train
 } from "lucide-react";
@@ -21,21 +21,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/lib/i18n";
-import { 
-  getWaitlistPassengers, 
-  reallocateSeat, 
-  updateMealStatus, 
-  reportIncident, 
-  getIncidents, 
-  checkInAttendance, 
-  checkOutAttendance, 
-  getDutyShifts, 
-  registerLuggage, 
+import {
+  getWaitlistPassengers,
+  reallocateSeat,
+  updateMealStatus,
+  reportIncident,
+  getIncidents,
+  checkInAttendance,
+  checkOutAttendance,
+  getDutyShifts,
+  registerLuggage,
   updateLuggageStatus,
   getLuggageList,
   broadcastOpsAlert,
   getUniqueTrains,
-  getTrainPassengers
+  getTrainPassengers,
+  updateIncidentStatus,
+  getActiveAttendance
 } from "@/actions/staff";
 
 export interface ManifestPassenger {
@@ -174,13 +176,18 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
     setAttendanceLoading(true);
     const roster = await getDutyShifts();
     setShifts(roster);
+    // Restore active check-in state (survives page refresh)
+    const active = await getActiveAttendance();
+    if (active) {
+      setAttendance(active);
+    }
     setAttendanceLoading(false);
   }
 
   // --- Feature 5: Luggage Functions ---
   async function fetchLuggage() {
     setLuggageLoading(true);
-    const list = await getLuggageList();
+    const list = await getLuggageList(selectedStation);
     setLuggageList(list);
     setLuggageLoading(false);
   }
@@ -419,6 +426,32 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
     setLuggageLoading(false);
   };
 
+  // --- Feature 3: Update Incident Status ---
+  const handleUpdateIncidentStatus = async (
+    incidentId: string,
+    currentStatus: string
+  ) => {
+    const statusCycle: Record<string, "Reported" | "In Progress" | "Resolved"> = {
+      "Reported": "In Progress",
+      "In Progress": "Resolved",
+      "Resolved": "Reported",
+    };
+    const nextStatus = statusCycle[currentStatus] ?? "In Progress";
+    setIncidentLoading(true);
+    const res = await updateIncidentStatus(incidentId, nextStatus);
+    if (res.success) {
+      // Update local state immediately without re-fetch
+      setIncidents((prev) =>
+        prev.map((inc) =>
+          inc.id === incidentId ? { ...inc, status: nextStatus } : inc
+        )
+      );
+    } else {
+      alert(res.error || "Failed to update incident status.");
+    }
+    setIncidentLoading(false);
+  };
+
   // Filter passengers based on their boarding station
   const stationPassengers = passengers.filter(
     (p) => p.from === selectedStation
@@ -435,66 +468,60 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
       <div className="flex flex-wrap gap-2 border-b border-[#eaddcd] dark:border-slate-800 pb-px">
         <button
           onClick={() => setActiveSubTab("manifest")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
-            activeSubTab === "manifest"
+          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "manifest"
               ? "border-[#c05621] text-[#c05621]"
               : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-          }`}
+            }`}
         >
           <UserCheck className="w-3.5 h-3.5" />
           {t("stationManifest")}
         </button>
         <button
           onClick={() => setActiveSubTab("trainPassengers")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
-            activeSubTab === "trainPassengers"
+          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "trainPassengers"
               ? "border-[#c05621] text-[#c05621]"
               : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-          }`}
+            }`}
         >
           <Train className="w-3.5 h-3.5" />
           Train Passengers
         </button>
         <button
           onClick={() => setActiveSubTab("ops")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
-            activeSubTab === "ops"
+          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "ops"
               ? "border-[#c05621] text-[#c05621]"
               : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-          }`}
+            }`}
         >
           <Volume2 className="w-3.5 h-3.5" />
           {t("trainOperations")}
         </button>
         <button
           onClick={() => setActiveSubTab("catering")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
-            activeSubTab === "catering"
+          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "catering"
               ? "border-[#c05621] text-[#c05621]"
               : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-          }`}
+            }`}
         >
           <Coffee className="w-3.5 h-3.5" />
           Catering Service
         </button>
         <button
           onClick={() => setActiveSubTab("attendance")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
-            activeSubTab === "attendance"
+          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "attendance"
               ? "border-[#c05621] text-[#c05621]"
               : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-          }`}
+            }`}
         >
           <Calendar className="w-3.5 h-3.5" />
           Duty Roster
         </button>
         <button
           onClick={() => setActiveSubTab("luggage")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
-            activeSubTab === "luggage"
+          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "luggage"
               ? "border-[#c05621] text-[#c05621]"
               : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-          }`}
+            }`}
         >
           <Package className="w-3.5 h-3.5" />
           Luggage Tracking
@@ -560,15 +587,14 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                         <td className="px-6 py-4 font-mono text-xs">{p.pnr}</td>
                         <td className="px-6 py-4 font-semibold text-xs">{p.seat}</td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                            p.status === "On-Board"
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${p.status === "On-Board"
                               ? "bg-amber-50 text-[#c05621] border-amber-200/50"
                               : p.status === "Checked In"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                              : p.status === "No Show"
-                              ? "bg-red-50 text-red-700 border-red-200/50"
-                              : "bg-slate-100 text-slate-650 border-slate-200"
-                          }`}>
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                                : p.status === "No Show"
+                                  ? "bg-red-50 text-red-700 border-red-200/50"
+                                  : "bg-slate-100 text-slate-650 border-slate-200"
+                            }`}>
                             {p.status}
                           </span>
                         </td>
@@ -850,14 +876,24 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                       <div key={inc.id} className="p-2 border border-slate-105 rounded bg-slate-50/50 dark:bg-slate-900/30 text-xs">
                         <div className="flex justify-between font-bold">
                           <span>{inc.category} ({inc.coach}{inc.seatNo ? `/Seat ${inc.seatNo}` : ""})</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-                            inc.severity === "Critical" ? "bg-red-100 text-red-850" : "bg-amber-100 text-amber-850"
-                          }`}>{inc.severity}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] ${inc.severity === "Critical" ? "bg-red-100 text-red-850" : "bg-amber-100 text-amber-850"
+                            }`}>{inc.severity}</span>
                         </div>
                         <p className="text-slate-600 dark:text-slate-400 mt-1">{inc.description}</p>
-                        <div className="text-[10px] text-slate-400 mt-1 flex justify-between">
-                          <span>Status: <strong>{inc.status}</strong></span>
-                          <span>Reported by: {inc.reporterName}</span>
+                        <div className="text-[10px] text-slate-400 mt-1.5 flex justify-between items-center">
+                          <span className={`px-2 py-0.5 rounded-full font-bold ${inc.status === "Resolved"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : inc.status === "In Progress"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}>{inc.status}</span>
+                          <button
+                            onClick={() => handleUpdateIncidentStatus(inc.id, inc.status)}
+                            disabled={incidentLoading}
+                            className="text-[10px] px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-slate-600 dark:text-slate-300 transition-colors disabled:opacity-50"
+                          >
+                            {inc.status === "Resolved" ? "Re-open" : inc.status === "In Progress" ? "Mark Resolved" : "Start Progress"}
+                          </button>
                         </div>
                       </div>
                     ))
@@ -906,11 +942,10 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                         </span>
                       </td>
                       <td className="px-6 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          p.mealStatus === "Delivered"
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${p.mealStatus === "Delivered"
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200/50"
                             : "bg-amber-50 text-amber-700 border border-amber-200/50"
-                        }`}>
+                          }`}>
                           {p.mealStatus || "Pending"}
                         </span>
                       </td>
@@ -1027,9 +1062,8 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                           Date: {s.date ? new Date(s.date).toLocaleDateString() : "Today"} | Shift: <span className="font-medium">{s.shiftType || "Morning"}</span>
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        s.status === "Completed" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"
-                      }`}>{s.status}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${s.status === "Completed" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"
+                        }`}>{s.status}</span>
                     </div>
                   ))
                 ) : (
@@ -1173,13 +1207,12 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                           )}
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        lug.status === "Delivered" 
-                          ? "bg-emerald-100 text-emerald-800" 
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${lug.status === "Delivered"
+                          ? "bg-emerald-100 text-emerald-800"
                           : lug.status === "Loaded"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-slate-100 text-slate-800"
-                      }`}>{lug.status}</span>
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-slate-100 text-slate-800"
+                        }`}>{lug.status}</span>
                     </div>
                   ))
                 ) : (
@@ -1252,15 +1285,14 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                           </td>
                           <td className="px-6 py-4 font-semibold text-xs">{p.seat}</td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                              p.status === "On-Board"
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${p.status === "On-Board"
                                 ? "bg-amber-50 text-[#c05621] border-amber-200/50"
                                 : p.status === "Checked In"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                                : p.status === "No Show"
-                                ? "bg-red-50 text-red-700 border-red-200/50"
-                                : "bg-slate-100 text-slate-650 border-slate-200"
-                            }`}>
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                                  : p.status === "No Show"
+                                    ? "bg-red-50 text-red-700 border-red-200/50"
+                                    : "bg-slate-100 text-slate-650 border-slate-200"
+                              }`}>
                               {p.status}
                             </span>
                           </td>

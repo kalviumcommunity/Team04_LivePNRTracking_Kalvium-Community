@@ -24,15 +24,24 @@ export async function getManifest(station: string) {
   try {
     await getAuthenticatedStaff();
 
+    // Only show bookings within a ±2 day window of today (catches same-day journeys)
+    const now = new Date();
+    const windowStart = new Date(now);
+    windowStart.setDate(now.getDate() - 2);
+    const windowEnd = new Date(now);
+    windowEnd.setDate(now.getDate() + 2);
+
     const bookings = await db.booking.findMany({
       where: {
         fromStation: station,
+        dateOfJourney: {
+          gte: windowStart,
+          lte: windowEnd,
+        },
       },
       include: {
         user: {
-          select: {
-            name: true,
-          },
+          select: { name: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -426,8 +435,7 @@ export async function registerLuggage(data: {
       },
     });
 
-    revalidatePath("/dashboard");
-    return { success: true, luggage };
+    revalidatePath("/dashboard");    return { success: true, luggage };
   } catch (error: unknown) {
     console.error("[REGISTER_LUGGAGE]", error);
     return { error: (error as Error).message || "Failed to register luggage." };
@@ -458,10 +466,13 @@ export async function updateLuggageStatus(luggageId: string, status: string) {
   }
 }
 
-export async function getLuggageList() {
+export async function getLuggageList(station?: string) {
   try {
     await getAuthenticatedStaff();
     const luggageList = await db.luggage.findMany({
+      where: station
+        ? { booking: { fromStation: station } }
+        : undefined,
       include: {
         booking: true,
       },
@@ -529,5 +540,57 @@ export async function getTrainPassengers(trainNo: string) {
     return [];
   }
 }
+
+// 9. Update Incident Status
+export async function updateIncidentStatus(
+  incidentId: string,
+  newStatus: "Reported" | "In Progress" | "Resolved"
+) {
+  try {
+    const staff = await getAuthenticatedStaff();
+    const incident = await db.incident.update({
+      where: { id: incidentId },
+      data: { status: newStatus },
+    });
+
+    await db.auditLog.create({
+      data: {
+        action: "UPDATE_INCIDENT_STATUS",
+        details: `Staff ${staff.name} updated incident ${incidentId} to status: ${newStatus}`,
+        userId: staff.id,
+      },
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true, incident };
+  } catch (error: unknown) {
+    console.error("[UPDATE_INCIDENT_STATUS]", error);
+    return { error: (error as Error).message || "Failed to update incident status." };
+  }
+}
+
+// 10. Get Active Attendance (restore check-in state on page refresh)
+export async function getActiveAttendance() {
+  try {
+    const staff = await getAuthenticatedStaff();
+    const active = await db.attendance.findFirst({
+      where: {
+        userId: staff.id,
+        checkOut: null,
+      },
+      orderBy: { checkIn: "desc" },
+    });
+    if (!active) return null;
+    return {
+      id: active.id,
+      checkIn: active.checkIn.toISOString(),
+      station: active.station,
+    };
+  } catch (error) {
+    console.error("[GET_ACTIVE_ATTENDANCE]", error);
+    return null;
+  }
+}
+
 
 
