@@ -30,9 +30,6 @@ export const authConfig: NextAuthConfig = {
       if (isOnDashboard) {
         if (isLoggedIn) return true; // Allow access if logged in
         return false; // Automatically redirect unauthenticated users to the signIn page (/login)
-      } else if (isLoggedIn && nextUrl.pathname === "/login") {
-        // If user is already logged in and tries to access the login page, redirect them to dashboard
-        return Response.redirect(new URL("/dashboard", nextUrl));
       }
       return true; // Allow access to other pages (e.g. landing page, public routes)
     },
