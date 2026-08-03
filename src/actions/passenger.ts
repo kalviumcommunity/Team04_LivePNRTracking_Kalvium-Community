@@ -275,3 +275,41 @@ export async function saveSearch(pnr: string) {
     return { success: false };
   }
 }
+
+// 9. Fetch Notifications
+export async function getNotifications() {
+  try {
+    const user = await getAuthenticatedUser();
+    const notifications = await db.notification.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
+    return notifications.map((n) => ({
+      id: n.id,
+      title: n.title,
+      message: n.message,
+      read: n.read,
+      createdAt: n.createdAt.toISOString(),
+    }));
+  } catch (error) {
+    console.error("[GET_NOTIFICATIONS]", error);
+    return [];
+  }
+}
+
+// 10. Mark all Notifications as read
+export async function markNotificationsAsRead() {
+  try {
+    const user = await getAuthenticatedUser();
+    await db.notification.updateMany({
+      where: { userId: user.id, read: false },
+      data: { read: true },
+    });
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("[MARK_NOTIFICATIONS_READ]", error);
+    return { success: false };
+  }
+}
+

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Train, 
   BookOpen, 
@@ -23,7 +23,12 @@ import {
   Ticket,
   Coffee,
   Calendar,
-  Package
+  Package,
+  Bell,
+  HelpCircle,
+  MessageSquare,
+  Send,
+  PhoneCall
 } from "lucide-react";
 import { applyTheme } from "@/lib/theme-utils";
 import { t, getSavedLanguage, LanguageCode } from "@/lib/i18n";
@@ -35,7 +40,7 @@ import { AdminPortal, type StaffMember } from "./admin-portal";
 import { SettingsPortal } from "@/components/dashboard/settings-portal";
 import { DashboardOverview } from "./dashboard-overview";
 import { TicketBooking } from "./ticket-booking";
-import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite } from "@/actions/passenger";
+import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite, getNotifications, markNotificationsAsRead } from "@/actions/passenger";
 import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus } from "@/actions/admin";
 import { updatePassengerBoarding, getManifest } from "@/actions/staff";
 
@@ -65,13 +70,26 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     setRawActiveTab(initialTab || (userRole === "staff" ? "manifest" : "overview"));
   }
 
-  const setActiveTab = (tabId: string) => {
-    setRawActiveTab(tabId);
-    router.push(`/dashboard/${tabId}`);
-  };
+  const searchParams = useSearchParams();
+  const urlPnr = searchParams.get("pnr");
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedPnr, setSelectedPnr] = useState<string | null>(null);
+  const [selectedPnr, setSelectedPnr] = useState<string | null>(urlPnr);
+
+  useEffect(() => {
+    if (urlPnr) {
+      setSelectedPnr(urlPnr);
+    }
+  }, [urlPnr]);
+
+  const setActiveTab = (tabId: string) => {
+    if (!tabId.startsWith("pnr")) {
+      setSelectedPnr(null);
+    }
+    const cleanTab = tabId.split("?")[0];
+    setRawActiveTab(cleanTab);
+    router.push(`/dashboard/${tabId}`);
+  };
 
   // Core Lifted States (populated from SQLite backend)
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
@@ -80,6 +98,16 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [favorites, setFavorites] = useState<{ id: string; pnr: string; label: string }[]>([]);
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Notifications and Help Desk States
+  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; read: boolean; createdAt: string }[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isHelpDeskOpen, setIsHelpDeskOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { sender: "agent", text: "Hello! Welcome to 24/7 Live Railway Support. How can I assist you with your booking or query today?" }
+  ]);
+  const [showCallToast, setShowCallToast] = useState(false);
 
   const [userName, setUserName] = useState<string>(() => {
     if (typeof window !== "undefined" && session?.user?.email) {
@@ -96,6 +124,36 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     return session?.user?.email || "demo@railwaypnr.com";
   });
 
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMsg = { sender: "user", text: chatInput };
+    setChatMessages((prev) => [...prev, userMsg]);
+    const currentInput = chatInput;
+    setChatInput("");
+
+    // Simulate automated agent response
+    setTimeout(() => {
+      let reply = "I'm checking the live railway feed for you. Could you please specify your PNR or query details?";
+      const lower = currentInput.toLowerCase();
+      if (lower.includes("pnr") || lower.includes("status")) {
+        reply = "To check your PNR status, you can use our Live PNR Tracker from the sidebar navigation.";
+      } else if (lower.includes("refund") || lower.includes("cancel")) {
+        reply = "For ticket cancellations and refunds, go to 'Booking History', select your ticket, and check support options.";
+      } else if (lower.includes("delay") || lower.includes("late")) {
+        reply = "You can view delays and announcements under 'Live Alerts' or in the 'Live PNR Tracker'.";
+      } else if (lower.includes("hello") || lower.includes("hi")) {
+        reply = "Hi there! How can I help you today? You can ask about status, refunds, delays, or catering.";
+      }
+      setChatMessages((prev) => [...prev, { sender: "agent", text: reply }]);
+    }, 1000);
+  };
+
+  const handleCallTollFree = () => {
+    setShowCallToast(true);
+    setTimeout(() => setShowCallToast(false), 5000);
+  };
 
   // Data Loading Trigger
   const loadPortalData = async () => {
@@ -108,6 +166,8 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
         setFavorites(favs);
         const history = await getSearchHistory();
         setSearches(history);
+        const userNotifs = await getNotifications();
+        setNotifications(userNotifs);
       } else if (userRole === "admin") {
         const staffList = await getStaffMembers();
         setStaff(staffList);
@@ -175,7 +235,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
 
   const handleCheckStatus = (pnr: string) => {
     setSelectedPnr(pnr);
-    setActiveTab("pnr");
+    setActiveTab(`pnr?pnr=${pnr}`);
   };
 
   // Passenger booking trigger
@@ -251,13 +311,40 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
           </div>
           <span className="font-bold text-sm">ixigo</span>
         </div>
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsHelpDeskOpen(true)}
+            className="p-1.5 text-slate-500 hover:text-[#c05621] dark:text-slate-400 dark:hover:text-amber-500 transition-colors"
+            title="Help Desk"
+          >
+            <HelpCircle className="w-4.5 h-4.5" />
+          </button>
+          <button 
+            onClick={async () => {
+              setIsNotificationsOpen(true);
+              if (notifications.some((n) => !n.read)) {
+                await markNotificationsAsRead();
+                const updated = await getNotifications();
+                setNotifications(updated);
+              }
+            }}
+            className="p-1.5 text-slate-500 hover:text-[#c05621] dark:text-slate-400 dark:hover:text-amber-500 transition-colors relative"
+            title="Live Alerts"
+          >
+            <Bell className="w-4.5 h-4.5" />
+            {notifications.some((n) => !n.read) && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            )}
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
+
 
       {/* Sidebar Navigation */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#faf8f5] dark:bg-slate-900 border-r border-[#eaddcd] dark:border-slate-800 flex flex-col justify-between p-5 transform transition-transform duration-300 lg:translate-x-0 ${
@@ -369,8 +456,32 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
             {t("portalAccess", currentLang)}: {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
           </span>
           <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
-            <span>{t("helpDesk", currentLang)}</span>
-            <span>{t("liveAlerts", currentLang)}</span>
+            <button 
+              onClick={() => setIsHelpDeskOpen(true)}
+              className="hover:text-[#c05621] dark:hover:text-amber-500 transition-colors flex items-center gap-1 font-bold"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#c05621] dark:text-amber-500" />
+              <span>{t("helpDesk", currentLang)}</span>
+            </button>
+            <button 
+              onClick={async () => {
+                setIsNotificationsOpen(true);
+                if (notifications.some((n) => !n.read)) {
+                  await markNotificationsAsRead();
+                  const updated = await getNotifications();
+                  setNotifications(updated);
+                }
+              }}
+              className="hover:text-[#c05621] dark:hover:text-amber-500 transition-colors flex items-center gap-1 font-bold relative"
+            >
+              <Bell className="w-3.5 h-3.5 text-[#c05621] dark:text-amber-500" />
+              <span>{t("liveAlerts", currentLang)}</span>
+              {notifications.some((n) => !n.read) && (
+                <span className="absolute -top-1 -right-2 px-1.5 py-0.5 text-[8px] font-bold text-white bg-red-650 rounded-full animate-pulse">
+                  {notifications.filter((n) => !n.read).length}
+                </span>
+              )}
+            </button>
             <button
               onClick={() => {
                 const isDark = document.documentElement.classList.contains("dark");
@@ -435,8 +546,12 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
                   favorites={favorites}
                   searches={searches}
                   onNavigateTab={(tabId, pnr) => {
-                    if (pnr) setSelectedPnr(pnr);
-                    setActiveTab(tabId);
+                    if (pnr) {
+                      setSelectedPnr(pnr);
+                      setActiveTab(`${tabId}?pnr=${pnr}`);
+                    } else {
+                      setActiveTab(tabId);
+                    }
                   }}
                 />
               )}
@@ -561,6 +676,189 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
           onClick={() => setMobileMenuOpen(false)}
           className="fixed inset-0 bg-slate-900/20 backdrop-blur-xs z-30 lg:hidden"
         />
+      )}
+
+      {/* Help Desk / Support Modal */}
+      {isHelpDeskOpen && (
+        <div className="fixed inset-0 z-55 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col h-132 animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="bg-[#FAF7F2] dark:bg-slate-950 p-4 border-b border-slate-150 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#c05621] text-white flex items-center justify-center font-bold text-sm">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">24/7 Travel Support Desk</h3>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Assistant Online
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsHelpDeskOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Chat Body */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#FAF8F5]/30 dark:bg-slate-950/20">
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
+                      msg.sender === "user"
+                        ? "bg-[#c05621] text-white rounded-br-none"
+                        : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-750 rounded-bl-none shadow-xs"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Chat Action shortcuts */}
+            <div className="px-4 py-2 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-850 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+              <button
+                onClick={() => {
+                  setChatInput("Check PNR Status");
+                  setTimeout(() => {
+                    const btn = document.getElementById("send-chat-btn");
+                    btn?.click();
+                  }, 50);
+                }}
+                className="px-2.5 py-1 text-[10px] font-bold border border-slate-200 dark:border-slate-800 hover:border-amber-400 rounded-full bg-white dark:bg-slate-900 text-slate-650 dark:text-slate-300 transition-colors"
+              >
+                🔍 Check PNR
+              </button>
+              <button
+                onClick={() => {
+                  setChatInput("How to cancel my booking?");
+                  setTimeout(() => {
+                    const btn = document.getElementById("send-chat-btn");
+                    btn?.click();
+                  }, 50);
+                }}
+                className="px-2.5 py-1 text-[10px] font-bold border border-slate-200 dark:border-slate-800 hover:border-amber-400 rounded-full bg-white dark:bg-slate-900 text-slate-650 dark:text-slate-300 transition-colors"
+              >
+                ❌ Cancellation
+              </button>
+              <button
+                onClick={handleCallTollFree}
+                className="px-2.5 py-1 text-[10px] font-bold border border-amber-200 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-full text-[#c05621] dark:text-amber-500 transition-colors flex items-center gap-1"
+              >
+                📞 Call Toll-Free
+              </button>
+            </div>
+
+            {/* Chat Input form */}
+            <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+              <input
+                type="text"
+                placeholder="Ask about seat confirmation, delays, cancellation..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                className="flex-1 h-10 text-xs px-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-hidden focus:border-[#c05621] text-slate-900 dark:text-white"
+              />
+              <button id="send-chat-btn" type="submit" className="h-10 w-10 shrink-0 bg-[#c05621] hover:bg-[#a8481b] text-white rounded-xl flex items-center justify-center transition-colors">
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Live Alerts / Notifications Modal */}
+      {isNotificationsOpen && (
+        <div className="fixed inset-0 z-55 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col h-112 animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="bg-[#FAF7F2] dark:bg-slate-950 p-4 border-b border-slate-150 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-500 flex items-center justify-center">
+                  <Bell className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">Live Broadcast & Alerts</h3>
+                  <p className="text-[10px] text-slate-500">Real-time schedule changes & announcements</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsNotificationsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Notifications Body */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#FAF8F5]/30 dark:bg-slate-950/20">
+              {notifications.length > 0 ? (
+                notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    className={`p-3 rounded-2xl border transition-all ${
+                      notif.read
+                        ? "bg-slate-50/60 dark:bg-slate-900/30 border-slate-105 dark:border-slate-850 opacity-80"
+                        : "bg-amber-50/30 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/50"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <h4 className="font-bold text-xs text-slate-850 dark:text-slate-100 flex items-center gap-1.5">
+                        {!notif.read && <span className="w-1.5 h-1.5 bg-[#c05621] rounded-full shrink-0" />}
+                        {notif.title}
+                      </h4>
+                      <span className="text-[9px] text-slate-400 font-medium">
+                        {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed font-medium">
+                      {notif.message}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center p-6 text-slate-400 space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-850 flex items-center justify-center">
+                    <Bell className="w-6 h-6 text-slate-350" />
+                  </div>
+                  <h4 className="font-bold text-xs text-slate-650 dark:text-slate-300">All Clear!</h4>
+                  <p className="text-[11px] max-w-[200px]">No active route delay bulletins or security alerts found.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Notifications Footer */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                onClick={() => setIsNotificationsOpen(false)}
+                className="px-4 py-1.5 bg-[#c05621] hover:bg-[#a8481b] text-white text-[11px] font-bold rounded-xl shadow-xs transition-colors"
+              >
+                Close Panel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toll-Free Call Toast Banner */}
+      {showCallToast && (
+        <div className="fixed bottom-6 right-6 z-60 bg-[#c05621] text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+          <PhoneCall className="w-5 h-5 text-amber-200 animate-pulse" />
+          <div>
+            <p className="text-xs font-bold font-sans">Dialing Railway Toll-Free Helpline...</p>
+            <p className="text-[11px] text-amber-100 font-mono">1800-111-139 / 139</p>
+          </div>
+          <button onClick={() => setShowCallToast(false)} className="ml-2 hover:bg-white/20 p-1 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       )}
     </div>
   );
