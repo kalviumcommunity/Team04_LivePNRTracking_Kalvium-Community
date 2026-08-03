@@ -78,6 +78,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
 
   useEffect(() => {
     if (urlPnr) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedPnr(urlPnr);
     }
   }, [urlPnr]);
@@ -88,7 +89,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     }
     const cleanTab = tabId.split("?")[0];
     setRawActiveTab(cleanTab);
-    router.push(`/dashboard/${tabId}`);
+    window.history.pushState(null, "", `/dashboard/${tabId}`);
   };
 
   // Core Lifted States (populated from SQLite backend)
@@ -98,6 +99,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [favorites, setFavorites] = useState<{ id: string; pnr: string; label: string }[]>([]);
   const [searches, setSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStation, setSelectedStation] = useState("NDLS");
 
   // Notifications and Help Desk States
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; read: boolean; createdAt: string }[]>([]);
@@ -138,13 +140,11 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
       let reply = "I'm checking the live railway feed for you. Could you please specify your PNR or query details?";
       const lower = currentInput.toLowerCase();
       if (lower.includes("pnr") || lower.includes("status")) {
-        reply = "To check your PNR status, you can use our Live PNR Tracker from the sidebar navigation.";
-      } else if (lower.includes("refund") || lower.includes("cancel")) {
-        reply = "For ticket cancellations and refunds, go to 'Booking History', select your ticket, and check support options.";
+        reply = "Sure! You can check your PNR status instantly by navigating to the Live PNR Tracker tab in the sidebar and entering your PNR number.";
+      } else if (lower.includes("book") || lower.includes("ticket")) {
+        reply = "To book a ticket, click on 'Book Ticket Now' in the sidebar, fill in the journey details, and hit Book.";
       } else if (lower.includes("delay") || lower.includes("late")) {
-        reply = "You can view delays and announcements under 'Live Alerts' or in the 'Live PNR Tracker'.";
-      } else if (lower.includes("hello") || lower.includes("hi")) {
-        reply = "Hi there! How can I help you today? You can ask about status, refunds, delays, or catering.";
+        reply = "Currently, train delay updates are managed live by the duty officer. Check the PNR status to see if your train has been updated.";
       }
       setChatMessages((prev) => [...prev, { sender: "agent", text: reply }]);
     }, 1000);
@@ -156,8 +156,11 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   };
 
   // Data Loading Trigger
-  const loadPortalData = async () => {
-    setLoading(true);
+  const loadPortalData = async (stationToFetch = selectedStation) => {
+    const hasData = bookings.length > 0 || passengers.length > 0 || staff.length > 0 || favorites.length > 0;
+    if (!hasData) {
+      setLoading(true);
+    }
     try {
       if (userRole === "passenger") {
         const userBookings = await getBookings();
@@ -174,9 +177,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
         const pList = await getPassengersList();
         setPassengers(pList);
       } else if (userRole === "staff") {
-        // Load manifest for the default station (NDLS). Staff portal self-manages
-        // station switching internally via getManifest() calls inside StaffPortal.
-        const manifestPassengers = await getManifest("NDLS");
+        const manifestPassengers = await getManifest(stationToFetch);
         setPassengers(manifestPassengers);
       }
     } catch (err) {
@@ -190,7 +191,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPortalData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userRole]);
+  }, [userRole, selectedStation]);
 
   const [currentLang, setCurrentLang] = useState<LanguageCode>(() => getSavedLanguage());
 
@@ -477,7 +478,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
               <Bell className="w-3.5 h-3.5 text-[#c05621] dark:text-amber-500" />
               <span>{t("liveAlerts", currentLang)}</span>
               {notifications.some((n) => !n.read) && (
-                <span className="absolute -top-1 -right-2 px-1.5 py-0.5 text-[8px] font-bold text-white bg-red-650 rounded-full animate-pulse">
+                <span className="absolute -top-1 -right-2 px-1.5 py-0.5 text-[8px] font-bold text-white bg-red-600 rounded-full animate-pulse">
                   {notifications.filter((n) => !n.read).length}
                 </span>
               )}
@@ -627,6 +628,9 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
                   onUpdatePassengerStatus={handleUpdatePassengerStatus} 
                   activeSubTab={activeTab}
                   setActiveSubTab={(tab) => setActiveTab(tab)}
+                  selectedStation={selectedStation}
+                  setSelectedStation={setSelectedStation}
+                  onRefreshData={loadPortalData}
                 />
               )}
               {activeTab === "pnr" && (
@@ -829,7 +833,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
                     <Bell className="w-6 h-6 text-slate-350" />
                   </div>
                   <h4 className="font-bold text-xs text-slate-650 dark:text-slate-300">All Clear!</h4>
-                  <p className="text-[11px] max-w-[200px]">No active route delay bulletins or security alerts found.</p>
+                  <p className="text-[11px] max-w-50">No active route delay bulletins or security alerts found.</p>
                 </div>
               )}
             </div>

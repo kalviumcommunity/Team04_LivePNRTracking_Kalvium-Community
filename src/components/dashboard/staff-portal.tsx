@@ -101,9 +101,20 @@ interface StaffPortalProps {
   onUpdatePassengerStatus: (id: string, newStatus: ManifestPassenger["status"]) => void;
   activeSubTab: string;
   setActiveSubTab: (tab: string) => void;
+  selectedStation: string;
+  setSelectedStation: (station: string) => void;
+  onRefreshData: () => Promise<void>;
 }
 
-export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerStatus, activeSubTab, setActiveSubTab }: StaffPortalProps) {
+export function StaffPortal({ 
+  passengers: initialPassengers, 
+  onUpdatePassengerStatus, 
+  activeSubTab, 
+  setActiveSubTab,
+  selectedStation,
+  setSelectedStation,
+  onRefreshData
+}: StaffPortalProps) {
   const { t } = useTranslation();
   const [passengers, setPassengers] = useState<ManifestPassenger[]>(initialPassengers);
   const [prevInitial, setPrevInitial] = useState(initialPassengers);
@@ -112,8 +123,6 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
     setPrevInitial(initialPassengers);
     setPassengers(initialPassengers);
   }
-
-  const [selectedStation, setSelectedStation] = useState("NDLS");
 
   // General Notification Broadcast state
   const [alertText, setAlertText] = useState("");
@@ -136,6 +145,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
   // Feature 3: Incident Reporting State
   const [incidents, setIncidents] = useState<IncidentItem[]>([]);
   const [incidentLoading, setIncidentLoading] = useState(false);
+  const [incidentSubmitting, setIncidentSubmitting] = useState(false);
   const [incidentForm, setIncidentForm] = useState({
     trainNo: "12425",
     coach: "",
@@ -234,10 +244,12 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
         void fetchTrains();
       }
     }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSubTab]);
 
   useEffect(() => {
     if (activeSubTab === "trainPassengers" && selectedTrainNo) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void fetchPassengersForTrain(selectedTrainNo);
     }
   }, [selectedTrainNo, activeSubTab]);
@@ -303,12 +315,12 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
         })
       );
       setSelectedNoShow(null);
+      await onRefreshData();
     } else {
       alert(res.error || "Failed to reallocate seat.");
     }
   };
 
-  // --- Feature 2: Catering Toggle ---
   const handleToggleMeal = async (bookingId: string, currentStatus: string) => {
     setUpdatingMealId(bookingId);
     const nextStatus = currentStatus === "Delivered" ? "Pending" : "Delivered";
@@ -318,6 +330,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
       setPassengers((prev) =>
         prev.map((p) => (p.id === bookingId ? { ...p, mealStatus: nextStatus } : p))
       );
+      await onRefreshData();
     }
   };
 
@@ -328,9 +341,9 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
       setIncidentStatusMsg("Please fill out coach and description.");
       return;
     }
-    setIncidentLoading(true);
+    setIncidentSubmitting(true);
     const res = await reportIncident(incidentForm);
-    setIncidentLoading(false);
+    setIncidentSubmitting(false);
     if (res.success) {
       setIncidentStatusMsg("Incident reported successfully!");
       setIncidentForm((prev) => ({ ...prev, coach: "", seatNo: "", description: "" }));
@@ -780,7 +793,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
             <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/70 dark:bg-slate-950/40 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <AlertOctagon className="w-5 h-5 text-red-650" />
+                  <AlertOctagon className="w-5 h-5 text-red-600" />
                   Report Incident Log
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -853,8 +866,8 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                     />
                   </div>
 
-                  <Button type="submit" disabled={incidentLoading} className="w-full bg-red-650 hover:bg-red-700 text-white text-xs h-8 font-semibold">
-                    {incidentLoading ? "Filing Report..." : "Log Incident"}
+                  <Button type="submit" disabled={incidentSubmitting} className="w-full bg-red-600 hover:bg-red-700 text-white text-xs h-8 font-semibold">
+                    {incidentSubmitting ? "Filing Report..." : "Log Incident"}
                   </Button>
 
                   {incidentStatusMsg && (
@@ -1022,7 +1035,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                     <Button
                       onClick={handleCheckOut}
                       disabled={attendanceLoading}
-                      className="w-full bg-red-650 hover:bg-red-700 text-white text-xs h-9 font-semibold"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white text-xs h-9 font-semibold"
                     >
                       {attendanceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check-Out Shift"}
                     </Button>
@@ -1331,7 +1344,7 @@ export function StaffPortal({ passengers: initialPassengers, onUpdatePassengerSt
                                     onClick={() => handleUpdateTrainPassengerStatus(p.id, "No Show")}
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 text-xs border-red-200 text-red-650 hover:bg-red-50/50 px-2"
+                                    className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50/50 px-2"
                                   >
                                     No Show
                                   </Button>
