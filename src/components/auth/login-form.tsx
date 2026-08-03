@@ -33,6 +33,7 @@ export function LoginForm() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -42,9 +43,40 @@ export function LoginForm() {
     },
   });
 
+  const emailValue = watch("email");
+  const passwordValue = watch("password");
+
+  const executeLogin = (email: string, password: string) => {
+    setError("");
+    setSuccess("");
+
+    startTransition(async () => {
+      try {
+        const res = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (res?.error) {
+          setError("Invalid email or password!");
+        } else if (res?.ok || !res?.error) {
+          setSuccess("Logged in successfully! Redirecting...");
+          window.location.href = "/dashboard";
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        setError("Something went wrong. Please try again.");
+      }
+    });
+  };
+
   const handleAutofill = (email: string) => {
-    setValue("email", email, { shouldValidate: true });
-    setValue("password", "password123", { shouldValidate: true });
+    setValue("email", email, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setValue("password", "password123", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    setTimeout(() => {
+      executeLogin(email, "password123");
+    }, 150);
   };
 
   const handleGoogleSignIn = async () => {
@@ -58,21 +90,7 @@ export function LoginForm() {
   };
 
   const onSubmit = (values: LoginInput) => {
-    setError("");
-    setSuccess("");
-
-    startTransition(async () => {
-      try {
-        const data = await login(values);
-        if (data?.error) {
-          setError(data.error);
-        } else if (data?.success) {
-          setSuccess(data.success);
-        }
-      } catch {
-        setError("Something went wrong. Please try again.");
-      }
-    });
+    executeLogin(values.email, values.password);
   };
 
   return (
@@ -99,6 +117,8 @@ export function LoginForm() {
                 placeholder="you@example.com"
                 disabled={isPending}
                 {...register("email")}
+                value={emailValue ?? ""}
+                onChange={(e) => setValue("email", e.target.value, { shouldValidate: true, shouldDirty: true })}
                 className={`bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:ring-amber-500/20 text-slate-900 dark:text-slate-100 ${
                   errors.email ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : ""
                 }`}
@@ -132,6 +152,8 @@ export function LoginForm() {
                 placeholder="••••••••"
                 disabled={isPending}
                 {...register("password")}
+                value={passwordValue ?? ""}
+                onChange={(e) => setValue("password", e.target.value, { shouldValidate: true, shouldDirty: true })}
                 className={`bg-white/50 dark:bg-slate-900/50 pr-10 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:ring-amber-500/20 text-slate-900 dark:text-slate-100 ${
                   errors.password ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : ""
                 }`}

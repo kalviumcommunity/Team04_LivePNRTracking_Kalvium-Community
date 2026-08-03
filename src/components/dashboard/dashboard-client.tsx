@@ -59,15 +59,28 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const router = useRouter();
   const userRole = session?.user?.role || "passenger";
   
+  // Validate initialTab against userRole to prevent blank screens on unauthorized tab URLs
+  const staffTabs = ["manifest", "trainPassengers", "ops", "catering", "attendance", "luggage"];
+  const passengerTabs = ["overview", "book", "history", "favorites"];
+  const adminTabs = ["overview", "staff", "passengers"];
+
+  const getValidTab = (requestedTab?: string) => {
+    if (!requestedTab) return userRole === "staff" ? "manifest" : userRole === "admin" ? "overview" : "overview";
+    if (userRole === "passenger" && staffTabs.includes(requestedTab)) return "overview";
+    if (userRole === "staff" && passengerTabs.includes(requestedTab)) return "manifest";
+    if (userRole === "admin" && staffTabs.includes(requestedTab)) return "overview";
+    return requestedTab;
+  };
+
   // Set tab defaults dynamically
   const [activeTab, setRawActiveTab] = useState<string>(
-    initialTab || (userRole === "staff" ? "manifest" : "overview")
+    getValidTab(initialTab)
   );
 
   const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
   if (initialTab !== prevInitialTab) {
     setPrevInitialTab(initialTab);
-    setRawActiveTab(initialTab || (userRole === "staff" ? "manifest" : "overview"));
+    setRawActiveTab(getValidTab(initialTab));
   }
 
   const searchParams = useSearchParams();

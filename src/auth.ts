@@ -34,51 +34,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Ensure credentials are provided
         if (!email || !password) return null;
 
-        // ── Demo / seed accounts (hardcoded check for testing & staging) ──
+        // 1. Check real users stored in database first
+        try {
+          const user = await db.user.findUnique({
+            where: { email },
+          });
+
+          if (user && user.password) {
+            const valid = await bcrypt.compare(password, user.password);
+            if (valid) {
+              return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                image: user.image,
+              };
+            }
+          }
+        } catch (e) {
+          console.error("Authorize database error:", e);
+        }
+
+        // 2. Demo / seed accounts fallback for quick testing
         if (password === "password123") {
-          // Mock passengers
           if (email === "demo@railwaypnr.com") {
             return { id: "1", name: "Demo User", email: "demo@railwaypnr.com", role: "passenger" };
           }
           if (email === "passenger@railwaypnr.com") {
             return { id: "4", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger" };
           }
-          // Mock staff
           if (email === "staff@railwaypnr.com") {
             return { id: "2", name: "Sanjay Sharma", email: "staff@railwaypnr.com", role: "staff" };
           }
-          // Mock admin
           if (email === "admin@railwaypnr.com") {
             return { id: "3", name: "Priyanka Rathore", email: "admin@railwaypnr.com", role: "admin" };
           }
         }
 
-        // ── Real users stored in PostgreSQL ───────────────────────────
-        try {
-          // Fetch user record from database matching email
-          const user = await db.user.findUnique({
-            where: { email },
-          });
-          
-          // Verify user exists and has a password (OAuth-only users might not have a password field)
-          if (!user || !user.password) return null;
-
-          // Compare provided password with hashed password in database
-          const valid = await bcrypt.compare(password, user.password);
-          if (!valid) return null; // Incorrect password
-
-          // Return user object on success
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            image: user.image,
-          };
-        } catch (e) {
-          console.error("Authorize error:", e);
-          return null; // Return null on database or network failures
-        }
+        return null;
       },
     }),
   ],
