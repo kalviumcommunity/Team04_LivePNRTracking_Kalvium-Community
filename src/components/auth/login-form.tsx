@@ -257,7 +257,7 @@ export function LoginForm() {
                 <span className="font-semibold block">{t("loginDemoAccount")} (Password: <code className="bg-amber-100/50 dark:bg-slate-900/50 px-1 py-0.5 rounded font-mono">password123</code>)</span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -271,20 +271,46 @@ export function LoginForm() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleAutofill("staff@railwaypnr.com")}
-                className="text-xs h-8 px-1 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-medium"
-              >
-                Staff
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
                 onClick={() => handleAutofill("admin@railwaypnr.com")}
                 className="text-xs h-8 px-1 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-medium"
               >
                 Admin
               </Button>
+            </div>
+            
+            <div className="space-y-1 pt-1 border-t border-amber-100/50 dark:border-slate-800/50">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 block text-center">
+                Staff Logins
+              </span>
+              <div className="grid grid-cols-3 gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAutofill("ttr@railwaypnr.com")}
+                  className="text-[11px] h-8 px-0.5 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-semibold"
+                >
+                  TTR
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAutofill("pantry@railwaypnr.com")}
+                  className="text-[11px] h-8 px-0.5 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-semibold"
+                >
+                  Pantry
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAutofill("maintenance@railwaypnr.com")}
+                  className="text-[11px] h-8 px-0.5 border-amber-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-slate-900/50 text-[#c05621] dark:text-orange-400 font-semibold"
+                >
+                  Maintenance
+                </Button>
+              </div>
             </div>
           </div>
           

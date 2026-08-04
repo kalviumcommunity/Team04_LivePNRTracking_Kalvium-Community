@@ -16,6 +16,7 @@ model User {
   password      String?
   role          String          @default("passenger")
   station       String?
+  subRole       String?
   active        Boolean         @default(true)
   accounts      Account[]
   sessions      Session[]

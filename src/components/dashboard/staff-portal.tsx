@@ -47,7 +47,7 @@ export interface ManifestPassenger {
   from: string;
   to: string;
   trainNo: string;
-  status: "Boarding" | "Checked In" | "On-Board" | "No Show";
+  status: "Boarding" | "Checked In" | "On-Board" | "No Show" | "Next Station" | "Boarded";
   seat: string;
   mealPreference?: string | null;
   mealStatus?: string;
@@ -104,6 +104,7 @@ interface StaffPortalProps {
   selectedStation: string;
   setSelectedStation: (station: string) => void;
   onRefreshData: () => Promise<void>;
+  userSubRole?: string | null;
 }
 
 export function StaffPortal({ 
@@ -113,9 +114,11 @@ export function StaffPortal({
   setActiveSubTab,
   selectedStation,
   setSelectedStation,
-  onRefreshData
+  onRefreshData,
+  userSubRole = null
 }: StaffPortalProps) {
   const { t } = useTranslation();
+  const isBoarded = (status: string) => status === "On-Board" || status === "Boarded";
   const [passengers, setPassengers] = useState<ManifestPassenger[]>(initialPassengers);
   const [prevInitial, setPrevInitial] = useState(initialPassengers);
 
@@ -471,54 +474,85 @@ export function StaffPortal({
   );
 
   // Stats
-  const totalBoarding = stationPassengers.length;
-  const totalOnBoard = stationPassengers.filter((p) => p.status === "On-Board").length;
-  const totalCheckedIn = stationPassengers.filter((p) => p.status === "Checked In").length;
+  const totalPassengersCount = stationPassengers.length;
+  const totalBoardedCount = stationPassengers.filter((p) => isBoarded(p.status)).length;
+  const totalNextStationCount = stationPassengers.filter((p) => p.status === "Next Station").length;
+  const totalNotBoardedCount = totalPassengersCount - totalBoardedCount - totalNextStationCount;
 
   return (
     <div className="space-y-6">
       {/* Sub Tab Navigation */}
       <div className="flex flex-wrap gap-2 border-b border-[#eaddcd] dark:border-slate-800 pb-px">
-        <button
-          onClick={() => setActiveSubTab("manifest")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "manifest"
-              ? "border-[#c05621] text-[#c05621]"
-              : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-            }`}
-        >
-          <UserCheck className="w-3.5 h-3.5" />
-          {t("stationManifest")}
-        </button>
-        <button
-          onClick={() => setActiveSubTab("trainPassengers")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "trainPassengers"
-              ? "border-[#c05621] text-[#c05621]"
-              : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-            }`}
-        >
-          <Train className="w-3.5 h-3.5" />
-          Train Passengers
-        </button>
-        <button
-          onClick={() => setActiveSubTab("ops")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "ops"
-              ? "border-[#c05621] text-[#c05621]"
-              : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-            }`}
-        >
-          <Volume2 className="w-3.5 h-3.5" />
-          {t("trainOperations")}
-        </button>
-        <button
-          onClick={() => setActiveSubTab("catering")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "catering"
-              ? "border-[#c05621] text-[#c05621]"
-              : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-            }`}
-        >
-          <Coffee className="w-3.5 h-3.5" />
-          Catering Service
-        </button>
+        {(!userSubRole || userSubRole === "ttr") && (
+          <>
+            <button
+              onClick={() => setActiveSubTab("manifest")}
+              className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "manifest"
+                  ? "border-[#c05621] text-[#c05621]"
+                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
+                }`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              {t("stationManifest")}
+            </button>
+            <button
+              onClick={() => setActiveSubTab("trainPassengers")}
+              className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "trainPassengers"
+                  ? "border-[#c05621] text-[#c05621]"
+                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
+                }`}
+            >
+              <Train className="w-3.5 h-3.5" />
+              Train Passengers
+            </button>
+            <button
+              onClick={() => setActiveSubTab("ops")}
+              className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "ops"
+                  ? "border-[#c05621] text-[#c05621]"
+                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
+                }`}
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+              {t("trainOperations")}
+            </button>
+          </>
+        )}
+        {userSubRole === "pantry" && (
+          <button
+            onClick={() => setActiveSubTab("catering")}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "catering"
+                ? "border-[#c05621] text-[#c05621]"
+                : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
+              }`}
+          >
+            <Coffee className="w-3.5 h-3.5" />
+            Catering Service
+          </button>
+        )}
+        {userSubRole === "maintenance" && (
+          <>
+            <button
+              onClick={() => setActiveSubTab("ops")}
+              className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "ops"
+                  ? "border-[#c05621] text-[#c05621]"
+                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
+                }`}
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+              {t("trainOperations")}
+            </button>
+            <button
+              onClick={() => setActiveSubTab("luggage")}
+              className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "luggage"
+                  ? "border-[#c05621] text-[#c05621]"
+                  : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
+                }`}
+            >
+              <Package className="w-3.5 h-3.5" />
+              Luggage Tracking
+            </button>
+          </>
+        )}
         <button
           onClick={() => setActiveSubTab("attendance")}
           className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "attendance"
@@ -528,16 +562,6 @@ export function StaffPortal({
         >
           <Calendar className="w-3.5 h-3.5" />
           Duty Roster
-        </button>
-        <button
-          onClick={() => setActiveSubTab("luggage")}
-          className={`px-4 py-2 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${activeSubTab === "luggage"
-              ? "border-[#c05621] text-[#c05621]"
-              : "border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-350"
-            }`}
-        >
-          <Package className="w-3.5 h-3.5" />
-          Luggage Tracking
         </button>
       </div>
 
@@ -560,20 +584,24 @@ export function StaffPortal({
             </select>
           </div>
 
-          <div className="flex gap-4">
-            <div className="text-right">
-              <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("boardingHere")}</span>
-              <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100">{totalBoarding}</span>
-            </div>
-            <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-              <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("checkedIn")}</span>
-              <span className="text-xl font-extrabold text-emerald-600">{totalCheckedIn}</span>
-            </div>
-            <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-              <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("onBoard")}</span>
-              <span className="text-xl font-extrabold text-[#c05621]">{totalOnBoard}</span>
-            </div>
-          </div>
+              <div className="flex gap-4">
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Total Passengers</span>
+                  <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100">{totalPassengersCount}</span>
+                </div>
+                <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Boarded</span>
+                  <span className="text-xl font-extrabold text-emerald-600">{totalBoardedCount}</span>
+                </div>
+                <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Next Station</span>
+                  <span className="text-xl font-extrabold text-amber-600">{totalNextStationCount}</span>
+                </div>
+                <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Not Boarded</span>
+                  <span className="text-xl font-extrabold text-red-600">{totalNotBoardedCount}</span>
+                </div>
+              </div>
         </div>
       )}
 
@@ -600,74 +628,54 @@ export function StaffPortal({
                         <td className="px-6 py-4 font-mono text-xs">{p.pnr}</td>
                         <td className="px-6 py-4 font-semibold text-xs">{p.seat}</td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${p.status === "On-Board"
-                              ? "bg-amber-50 text-[#c05621] border-amber-200/50"
-                              : p.status === "Checked In"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                                : p.status === "No Show"
-                                  ? "bg-red-50 text-red-700 border-red-200/50"
-                                  : "bg-slate-100 text-slate-650 border-slate-200"
-                            }`}>
-                            {p.status}
-                          </span>
+                          {p.status === "On-Board" || p.status === "Boarded" ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200/50">
+                              Boarded
+                            </span>
+                          ) : p.status === "Next Station" ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-250/50">
+                              Next Station
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-50 text-red-700 border-red-200/50">
+                              Not Boarded
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end items-center gap-2">
-                            {p.status === "Boarding" && (
-                              <>
-                                <Button
-                                  onClick={() => onUpdatePassengerStatus(p.id, "Checked In")}
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs border-emerald-200 text-emerald-600 hover:bg-emerald-50/50 px-2"
-                                >
-                                  Check In
-                                </Button>
-                                <Button
-                                  onClick={() => onUpdatePassengerStatus(p.id, "No Show")}
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50/50 px-2"
-                                >
-                                  No Show
-                                </Button>
-                              </>
-                            )}
-                            {p.status === "Checked In" && (
+                            {p.status === "On-Board" || p.status === "Boarded" ? (
+                              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                <Check className="w-4 h-4 text-emerald-500" />
+                                Boarded
+                              </span>
+                            ) : p.status === "Next Station" ? (
                               <>
                                 <Button
                                   onClick={() => onUpdatePassengerStatus(p.id, "On-Board")}
                                   size="sm"
-                                  className="h-7 text-xs bg-[#c05621] hover:bg-[#a64819] text-white px-2"
+                                  className="h-7 text-xs px-2.5 font-semibold transition-all border border-emerald-200 text-emerald-600 hover:bg-emerald-50/50 bg-transparent"
                                 >
-                                  Board
+                                  Mark Boarded
                                 </Button>
                                 <Button
                                   onClick={() => onUpdatePassengerStatus(p.id, "No Show")}
                                   size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50/50 px-2"
+                                  className="h-7 text-xs px-2.5 font-semibold transition-all border border-red-200 text-red-600 hover:bg-red-50/50 bg-transparent"
                                 >
-                                  No Show
+                                  Mark Not Boarded
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={() => handleOpenReallocateModal(p)}
+                                  size="sm"
+                                  className="h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 shadow-xs"
+                                >
+                                  Reallocate Seat
                                 </Button>
                               </>
                             )}
-                            {p.status === "No Show" && (
-                              <Button
-                                onClick={() => handleOpenReallocateModal(p)}
-                                size="sm"
-                                className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 animate-pulse"
-                              >
-                                Reallocate Seat ({p.seat})
-                              </Button>
-                            )}
-                            {p.status === "On-Board" && (
-                              <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-                                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                On Board
-                              </span>
-                            )}
-                          </div>
                         </td>
                       </tr>
                     ))
@@ -1298,74 +1306,54 @@ export function StaffPortal({
                           </td>
                           <td className="px-6 py-4 font-semibold text-xs">{p.seat}</td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${p.status === "On-Board"
-                                ? "bg-amber-50 text-[#c05621] border-amber-200/50"
-                                : p.status === "Checked In"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
-                                  : p.status === "No Show"
-                                    ? "bg-red-50 text-red-700 border-red-200/50"
-                                    : "bg-slate-100 text-slate-650 border-slate-200"
-                              }`}>
-                              {p.status}
-                            </span>
+                            {p.status === "On-Board" || p.status === "Boarded" ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200/50">
+                                Boarded
+                              </span>
+                            ) : p.status === "Next Station" ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-250/50">
+                                Next Station
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-50 text-red-700 border-red-200/50">
+                                Not Boarded
+                              </span>
+                            )}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end items-center gap-2">
-                              {p.status === "Boarding" && (
-                                <>
-                                  <Button
-                                    onClick={() => handleUpdateTrainPassengerStatus(p.id, "Checked In")}
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs border-emerald-200 text-emerald-600 hover:bg-emerald-50/50 px-2"
-                                  >
-                                    Check In
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleUpdateTrainPassengerStatus(p.id, "No Show")}
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50/50 px-2"
-                                  >
-                                    No Show
-                                  </Button>
-                                </>
-                              )}
-                              {p.status === "Checked In" && (
-                                <>
-                                  <Button
-                                    onClick={() => handleUpdateTrainPassengerStatus(p.id, "On-Board")}
-                                    size="sm"
-                                    className="h-7 text-xs bg-[#c05621] hover:bg-[#a64819] text-white px-2"
-                                  >
-                                    Board
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleUpdateTrainPassengerStatus(p.id, "No Show")}
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50/50 px-2"
-                                  >
-                                    No Show
-                                  </Button>
-                                </>
-                              )}
-                              {p.status === "No Show" && (
+                            {p.status === "On-Board" || p.status === "Boarded" ? (
+                              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-end gap-1">
+                                <Check className="w-4 h-4 text-emerald-500" />
+                                Boarded
+                              </span>
+                            ) : p.status === "Next Station" ? (
+                              <div className="flex justify-end items-center gap-2">
+                                <Button
+                                  onClick={() => handleUpdateTrainPassengerStatus(p.id, "On-Board")}
+                                  size="sm"
+                                  className="h-7 text-xs px-2.5 font-semibold transition-all border border-emerald-200 text-emerald-600 hover:bg-emerald-50/50 bg-transparent"
+                                >
+                                  Mark Boarded
+                                </Button>
+                                <Button
+                                  onClick={() => handleUpdateTrainPassengerStatus(p.id, "No Show")}
+                                  size="sm"
+                                  className="h-7 text-xs px-2.5 font-semibold transition-all border border-red-200 text-red-600 hover:bg-red-50/50 bg-transparent"
+                                >
+                                  Mark Not Boarded
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex justify-end items-center gap-2">
                                 <Button
                                   onClick={() => handleOpenReallocateModal(p)}
                                   size="sm"
-                                  className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-3 animate-pulse"
+                                  className="h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 shadow-xs"
                                 >
-                                  Reallocate Seat ({p.seat})
+                                  Reallocate Seat
                                 </Button>
-                              )}
-                              {p.status === "On-Board" && (
-                                <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                  On Board
-                                </span>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
