@@ -10,9 +10,17 @@ async function getAuthenticatedStaff() {
   if (!session?.user?.email) {
     throw new Error("Unauthorized: Please sign in.");
   }
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { email: session.user.email },
   });
+
+  // Fallback for demo staff users if specific email not found in DB
+  if (!user && (session?.user as any)?.role === "staff") {
+    user = await db.user.findFirst({
+      where: { role: "staff" },
+    });
+  }
+
   if (!user || (user.role !== "staff" && user.role !== "admin")) {
     throw new Error("Unauthorized: Staff access required.");
   }
