@@ -48,6 +48,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                subRole: user.subRole,
                 image: user.image,
               };
             }
@@ -59,16 +60,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 2. Demo / seed accounts fallback for quick testing
         if (password === "password123") {
           if (email === "demo@railwaypnr.com") {
-            return { id: "1", name: "Demo User", email: "demo@railwaypnr.com", role: "passenger" };
+            return { id: "1", name: "Demo User", email: "demo@railwaypnr.com", role: "passenger", subRole: null };
           }
           if (email === "passenger@railwaypnr.com") {
-            return { id: "4", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger" };
+            return { id: "4", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger", subRole: null };
           }
           if (email === "staff@railwaypnr.com") {
-            return { id: "2", name: "Sanjay Sharma", email: "staff@railwaypnr.com", role: "staff" };
+            return { id: "2", name: "Sanjay Sharma", email: "staff@railwaypnr.com", role: "staff", subRole: "ttr" };
+          }
+          if (email === "ttr@railwaypnr.com") {
+            return { id: "ttr", name: "TTR Officer", email: "ttr@railwaypnr.com", role: "staff", subRole: "ttr" };
+          }
+          if (email === "pantry@railwaypnr.com") {
+            return { id: "pantry", name: "Pantry Manager", email: "pantry@railwaypnr.com", role: "staff", subRole: "pantry" };
+          }
+          if (email === "maintenance@railwaypnr.com") {
+            return { id: "maintenance", name: "Maintenance Engineer", email: "maintenance@railwaypnr.com", role: "staff", subRole: "maintenance" };
           }
           if (email === "admin@railwaypnr.com") {
-            return { id: "3", name: "Priyanka Rathore", email: "admin@railwaypnr.com", role: "admin" };
+            return { id: "3", name: "Priyanka Rathore", email: "admin@railwaypnr.com", role: "admin", subRole: null };
           }
         }
 
@@ -84,6 +94,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as { role?: string }).role ?? "passenger";
+        token.subRole = (user as { subRole?: string | null }).subRole ?? null;
       }
       return token;
     },
@@ -94,6 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         (session.user as { role?: string }).role = (token.role as string) ?? "passenger";
+        (session.user as { subRole?: string | null }).subRole = (token.subRole as string | null) ?? null;
       }
       return session;
     },

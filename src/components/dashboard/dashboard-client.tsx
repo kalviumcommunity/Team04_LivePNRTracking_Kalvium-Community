@@ -50,6 +50,7 @@ interface DashboardClientProps {
       name?: string | null;
       email?: string | null;
       role?: string | null;
+      subRole?: string | null;
     } | null;
   } | null;
   initialTab?: string;
@@ -58,6 +59,7 @@ interface DashboardClientProps {
 export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const router = useRouter();
   const userRole = session?.user?.role || "passenger";
+  const userSubRole = (session?.user as any)?.subRole || null;
   
   // Validate initialTab against userRole to prevent blank screens on unauthorized tab URLs
   const staffTabs = ["manifest", "trainPassengers", "ops", "catering", "attendance", "luggage"];
@@ -65,11 +67,38 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const adminTabs = ["overview", "staff", "passengers"];
 
   const getValidTab = (requestedTab?: string) => {
-    if (!requestedTab) return userRole === "staff" ? "manifest" : userRole === "admin" ? "overview" : "overview";
-    if (userRole === "passenger" && staffTabs.includes(requestedTab)) return "overview";
-    if (userRole === "staff" && passengerTabs.includes(requestedTab)) return "manifest";
-    if (userRole === "admin" && staffTabs.includes(requestedTab)) return "overview";
-    return requestedTab;
+    if (userRole === "passenger") {
+      if (!requestedTab || staffTabs.includes(requestedTab) || adminTabs.includes(requestedTab)) {
+        return "overview";
+      }
+      return requestedTab;
+    }
+    if (userRole === "admin") {
+      if (!requestedTab || !adminTabs.includes(requestedTab)) {
+        return "overview";
+      }
+      return requestedTab;
+    }
+    if (userRole === "staff") {
+      let allowedTabs = ["attendance", "pnr"];
+      let defaultTab = "manifest";
+      if (!userSubRole || userSubRole === "ttr") {
+        allowedTabs = ["manifest", "trainPassengers", "ops", "attendance", "pnr"];
+        defaultTab = "manifest";
+      } else if (userSubRole === "pantry") {
+        allowedTabs = ["catering", "attendance", "pnr"];
+        defaultTab = "catering";
+      } else if (userSubRole === "maintenance") {
+        allowedTabs = ["ops", "attendance", "luggage", "pnr"];
+        defaultTab = "ops";
+      }
+      
+      if (!requestedTab || !allowedTabs.includes(requestedTab)) {
+        return defaultTab;
+      }
+      return requestedTab;
+    }
+    return requestedTab || "overview";
   };
 
   // Set tab defaults dynamically
@@ -221,15 +250,29 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   // Navigation specs per role
   const getNavigationItems = () => {
     if (userRole === "staff") {
-      return [
-        { id: "manifest", name: t("staffPortal", currentLang), icon: Clipboard },
-        { id: "trainPassengers", name: t("trainPassengers", currentLang), icon: Train },
-        { id: "ops", name: "Train Operations", icon: Volume2 },
-        { id: "catering", name: "Catering Service", icon: Coffee },
+      const items = [];
+      if (!userSubRole || userSubRole === "ttr") {
+        items.push(
+          { id: "manifest", name: t("staffPortal", currentLang), icon: Clipboard },
+          { id: "trainPassengers", name: t("trainPassengers", currentLang), icon: Train },
+          { id: "ops", name: "Train Operations", icon: Volume2 }
+        );
+      } else if (userSubRole === "pantry") {
+        items.push(
+          { id: "catering", name: "Catering Service", icon: Coffee }
+        );
+      } else if (userSubRole === "maintenance") {
+        items.push(
+          { id: "ops", name: "Train Operations", icon: Volume2 },
+          { id: "luggage", name: "Luggage Tracking", icon: Package }
+        );
+      }
+      // Common staff items
+      items.push(
         { id: "attendance", name: "Duty Roster", icon: Calendar },
-        { id: "luggage", name: "Luggage Tracking", icon: Package },
-        { id: "pnr", name: t("livePnrTracker", currentLang), icon: Search },
-      ];
+        { id: "pnr", name: t("livePnrTracker", currentLang), icon: Search }
+      );
+      return items;
     }
     if (userRole === "admin") {
       return [
@@ -644,6 +687,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
                   selectedStation={selectedStation}
                   setSelectedStation={setSelectedStation}
                   onRefreshData={loadPortalData}
+                  userSubRole={userSubRole}
                 />
               )}
               {activeTab === "pnr" && (

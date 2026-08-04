@@ -49,6 +49,40 @@ async function main() {
       password: hashedPassword,
       role: "staff",
       station: "NDLS",
+      subRole: "ttr",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: "TTR Officer",
+      email: "ttr@railwaypnr.com",
+      password: hashedPassword,
+      role: "staff",
+      station: "NDLS",
+      subRole: "ttr",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: "Pantry Manager",
+      email: "pantry@railwaypnr.com",
+      password: hashedPassword,
+      role: "staff",
+      station: "NDLS",
+      subRole: "pantry",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: "Maintenance Engineer",
+      email: "maintenance@railwaypnr.com",
+      password: hashedPassword,
+      role: "staff",
+      station: "NDLS",
+      subRole: "maintenance",
     },
   });
 
@@ -76,7 +110,7 @@ async function main() {
       fromStation: "NDLS",
       toStation: "CNB",
       status: "CNF",
-      boardingStatus: "Boarding",
+      boardingStatus: "On-Board",
       seat: "A1/25",
       passengerName: "Akhilan Subramani",
       mealPreference: "Veg",
@@ -94,7 +128,7 @@ async function main() {
       fromStation: "NDLS",
       toStation: "LJN",
       status: "CNF",
-      boardingStatus: "Checked In",
+      boardingStatus: "On-Board",
       seat: "C2/14",
       passengerName: "Akhilan Subramani",
       mealPreference: "Non-Veg",
@@ -112,7 +146,7 @@ async function main() {
       fromStation: "NDLS",
       toStation: "ASR",
       status: "CNF",
-      boardingStatus: "On-Board",
+      boardingStatus: "No Show",
       seat: "G5/4",
       passengerName: "Akhilan Subramani",
       mealPreference: "Veg",
@@ -131,7 +165,7 @@ async function main() {
       fromStation: "NDLS",
       toStation: "CNB",
       status: "WL",
-      boardingStatus: "Boarding",
+      boardingStatus: "Next Station",
       seat: "WL/3",
       passengerName: "Kavitha Menon",
       userId: passenger.id,
