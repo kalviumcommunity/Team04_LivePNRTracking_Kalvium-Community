@@ -50,7 +50,7 @@ async function main() {
       role: "staff",
       station: "NDLS",
       subRole: "ttr",
-    },
+    } as any,
   });
 
   await prisma.user.create({
@@ -61,7 +61,7 @@ async function main() {
       role: "staff",
       station: "NDLS",
       subRole: "ttr",
-    },
+    } as any,
   });
 
   await prisma.user.create({
@@ -72,7 +72,7 @@ async function main() {
       role: "staff",
       station: "NDLS",
       subRole: "pantry",
-    },
+    } as any,
   });
 
   await prisma.user.create({
@@ -83,7 +83,7 @@ async function main() {
       role: "staff",
       station: "NDLS",
       subRole: "maintenance",
-    },
+    } as any,
   });
 
   await prisma.user.create({
