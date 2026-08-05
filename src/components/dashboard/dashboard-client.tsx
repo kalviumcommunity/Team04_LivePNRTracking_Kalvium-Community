@@ -59,11 +59,10 @@ interface DashboardClientProps {
 export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const router = useRouter();
   const userRole = session?.user?.role || "passenger";
-  const userSubRole = (session?.user as any)?.subRole || null;
+  const userSubRole = session?.user?.subRole || null;
   
   // Validate initialTab against userRole to prevent blank screens on unauthorized tab URLs
   const staffTabs = ["manifest", "trainPassengers", "ops", "catering", "attendance", "luggage"];
-  const passengerTabs = ["overview", "book", "history", "favorites"];
   const adminTabs = ["overview", "staff", "passengers"];
 
   const getValidTab = (requestedTab?: string) => {
@@ -83,10 +82,10 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
       let allowedTabs = ["attendance", "pnr"];
       let defaultTab = "manifest";
       if (!userSubRole || userSubRole === "ttr") {
-        allowedTabs = ["manifest", "trainPassengers", "ops", "attendance", "pnr"];
+        allowedTabs = ["manifest", "trainPassengers", "ops", "attendance"];
         defaultTab = "manifest";
       } else if (userSubRole === "pantry") {
-        allowedTabs = ["catering", "attendance", "pnr"];
+        allowedTabs = ["catering", "attendance"];
         defaultTab = "catering";
       } else if (userSubRole === "maintenance") {
         allowedTabs = ["ops", "attendance", "luggage", "pnr"];
@@ -268,10 +267,10 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
         );
       }
       // Common staff items
-      items.push(
-        { id: "attendance", name: "Duty Roster", icon: Calendar },
-        { id: "pnr", name: t("livePnrTracker", currentLang), icon: Search }
-      );
+      items.push({ id: "attendance", name: "Duty Roster", icon: Calendar });
+      if (userSubRole !== "pantry" && userSubRole !== "ttr" && userSubRole) {
+        items.push({ id: "pnr", name: t("livePnrTracker", currentLang), icon: Search });
+      }
       return items;
     }
     if (userRole === "admin") {
