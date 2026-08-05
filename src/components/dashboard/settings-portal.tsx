@@ -43,6 +43,67 @@ import {
   HardDrive
 } from "lucide-react";
 
+// TOTP Utilities for 2FA validation
+function base32Decode(str: string): Uint8Array {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const cleaned = str.toUpperCase().replace(/[\s-]/g, "");
+  let bits = "";
+  for (let i = 0; i < cleaned.length; i++) {
+    const val = alphabet.indexOf(cleaned[i]);
+    if (val === -1) continue;
+    bits += val.toString(2).padStart(5, "0");
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  }
+  return new Uint8Array(bytes);
+}
+
+async function getTOTPCodeForCounter(secretBase32: string, counter: number): Promise<string> {
+  const keyBytes = base32Decode(secretBase32);
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  view.setUint32(0, 0, false);
+  view.setUint32(4, counter, false);
+  
+  const cryptoKey = await window.crypto.subtle.importKey(
+    "raw",
+    keyBytes.buffer as ArrayBuffer,
+    { name: "HMAC", hash: { name: "SHA-1" } },
+    false,
+    ["sign"]
+  );
+  
+  const signature = await window.crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    buffer
+  );
+  
+  const hmac = new Uint8Array(signature);
+  const offset = hmac[hmac.length - 1] & 0xf;
+  const code =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+    
+  return (code % 1000000).toString().padStart(6, "0");
+}
+
+async function verifyTOTP(code: string): Promise<boolean> {
+  const secret = "RAILWAYPNRSEC267";
+  const epoch = Math.floor(Date.now() / 1000);
+  const counter = Math.floor(epoch / 30);
+  
+  const computed = await getTOTPCodeForCounter(secret, counter);
+  const computedPrev = await getTOTPCodeForCounter(secret, counter - 1);
+  const computedNext = await getTOTPCodeForCounter(secret, counter + 1);
+  
+  return code === computed || code === computedPrev || code === computedNext;
+}
+
 interface SettingsPortalProps {
   user?: {
     name?: string | null;
@@ -96,8 +157,11 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorMethod, setTwoFactorMethod] = useState<"app" | "sms">("app");
+  const [show2faSetupModal, setShow2faSetupModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationError, setVerificationError] = useState("");
   const [sessionTimeout, setSessionTimeout] = useState("30");
   const [whitelistedIp, setWhitelistedIp] = useState("192.168.1.100");
   const [ipList, setIpList] = useState<string[]>(["192.168.1.100", "10.0.0.45"]);
@@ -659,8 +723,14 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
                       type="checkbox"
                       checked={twoFactorEnabled}
                       onChange={(e) => {
-                        setTwoFactorEnabled(e.target.checked);
-                        showToast(e.target.checked ? "2FA Protection Enabled." : "2FA Protection Disabled.");
+                        if (e.target.checked) {
+                          setShow2faSetupModal(true);
+                          setVerificationCode("");
+                          setVerificationError("");
+                        } else {
+                          setTwoFactorEnabled(false);
+                          showToast("2FA Protection Disabled.");
+                        }
                       }}
                       className="sr-only peer"
                     />
@@ -1328,6 +1398,89 @@ export function SettingsPortal({ user, onProfileUpdate }: SettingsPortalProps) {
           )}
         </div>
       </div>
+      {/* 2FA Setup Modal */}
+      {show2faSetupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md p-6 rounded-2xl border border-white/10 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+              Set up Authenticator App (2FA)
+            </h3>
+            <p className="text-xs text-slate-500 mb-4">
+              To verify and link your account, follow the steps below using a TOTP authenticator app like Google Authenticator or Microsoft Authenticator.
+            </p>
+
+            <div className="space-y-4">
+              {/* Step 1: Scan QR */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider block">
+                  Step 1: Scan QR Code
+                </span>
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`otpauth://totp/RailwayPNR:${email || "user@railwaypnr.com"}?secret=RAILWAYPNRSEC267&issuer=RailwayPNR`)}`} 
+                    alt="2FA QR Code" 
+                    className="w-36 h-36 mx-auto bg-white p-1.5 rounded-lg shadow-inner"
+                  />
+                  <div className="mt-2 font-mono text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-800/80 py-1 px-2 rounded inline-block">
+                    Secret: RAIL-WAYP-NRSE-C267
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Code verification */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider block">
+                  Step 2: Verification Code
+                </span>
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="Enter 6-digit code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                  className="w-full text-center tracking-[0.5em] text-lg font-mono py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:ring-amber-500/20 text-slate-900 dark:text-slate-100"
+                />
+                {verificationError && (
+                  <p className="text-[10px] text-red-500 font-semibold text-center">{verificationError}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShow2faSetupModal(false);
+                  setTwoFactorEnabled(false);
+                }}
+                className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (verificationCode.length !== 6) {
+                    setVerificationError("Please enter a valid 6-digit code.");
+                  } else {
+                    const isValid = await verifyTOTP(verificationCode);
+                    if (isValid) {
+                      setTwoFactorEnabled(true);
+                      setShow2faSetupModal(false);
+                      showToast("2FA Protection Enabled Successfully!");
+                    } else {
+                      setVerificationError("Invalid 2FA code. Please check your authenticator app.");
+                    }
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/10"
+              >
+                Activate 2FA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
