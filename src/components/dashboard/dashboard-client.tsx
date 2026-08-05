@@ -28,7 +28,8 @@ import {
   HelpCircle,
   MessageSquare,
   Send,
-  PhoneCall
+  PhoneCall,
+  ClipboardList
 } from "lucide-react";
 import { applyTheme } from "@/lib/theme-utils";
 import { t, getSavedLanguage, LanguageCode } from "@/lib/i18n";
@@ -36,12 +37,12 @@ import { PnrTracker } from "./pnr-tracker";
 import { BookingHistory, type BookingRecord } from "./booking-history";
 import { SavedFavorites } from "./saved-favorites";
 import { StaffPortal, type ManifestPassenger } from "./staff-portal";
-import { AdminPortal, type StaffMember } from "./admin-portal";
+import { AdminPortal, type StaffMember, type AuditLogEntry, type AdminStats } from "./admin-portal";
 import { SettingsPortal } from "@/components/dashboard/settings-portal";
 import { DashboardOverview } from "./dashboard-overview";
 import { TicketBooking } from "./ticket-booking";
 import { getBookings, bookTicket, getFavorites, getSearchHistory, addFavorite, removeFavorite, getNotifications, markNotificationsAsRead } from "@/actions/passenger";
-import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus } from "@/actions/admin";
+import { getStaffMembers, getPassengersList, addStaffMember, toggleStaffStatus, deleteStaffMember, getAuditLogs, getAdminStats } from "@/actions/admin";
 import { updatePassengerBoarding, getManifest } from "@/actions/staff";
 
 interface DashboardClientProps {
@@ -63,7 +64,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   
   // Validate initialTab against userRole to prevent blank screens on unauthorized tab URLs
   const staffTabs = ["manifest", "trainPassengers", "ops", "catering", "attendance", "luggage"];
-  const adminTabs = ["overview", "staff", "passengers"];
+  const adminTabs = ["overview", "staff", "passengers", "auditlogs"];
 
   const getValidTab = (requestedTab?: string) => {
     if (userRole === "passenger") {
@@ -142,6 +143,16 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [loading, setLoading] = useState(true);
   const [selectedStation, setSelectedStation] = useState("NDLS");
 
+  // Admin-specific state
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [adminStats, setAdminStats] = useState<AdminStats>({
+    totalStaff: 0,
+    totalBookings: 0,
+    activeStaff: 0,
+    passengerCount: 0,
+    systemUptime: "99.98%",
+  });
+
   // Notifications and Help Desk States
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; read: boolean; createdAt: string }[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -213,10 +224,16 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
         const userNotifs = await getNotifications();
         setNotifications(userNotifs);
       } else if (userRole === "admin") {
-        const staffList = await getStaffMembers();
+        const [staffList, pList, logs, stats] = await Promise.all([
+          getStaffMembers(),
+          getPassengersList(),
+          getAuditLogs(),
+          getAdminStats(),
+        ]);
         setStaff(staffList);
-        const pList = await getPassengersList();
         setPassengers(pList);
+        setAuditLogs(logs);
+        setAdminStats(stats);
       } else if (userRole === "staff") {
         const manifestPassengers = await getManifest(stationToFetch);
         setPassengers(manifestPassengers);
@@ -333,6 +350,7 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
         { id: "overview", name: t("dashboardOverview", currentLang), icon: Activity },
         { id: "staff", name: "Manage Staff", icon: Users },
         { id: "passengers", name: "Manage Passengers", icon: User },
+        { id: "auditlogs", name: "Audit Log", icon: ClipboardList },
       ];
     }
     return [
@@ -393,11 +411,16 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
 
   // Admin updates
   const handleAddStaff = async (newStaff: Omit<StaffMember, "id" | "role" | "status">) => {
-    const res = await addStaffMember(newStaff);
+    const res = await addStaffMember({
+      name: newStaff.name,
+      email: newStaff.email,
+      station: newStaff.station,
+      subRole: newStaff.subRole ?? null,
+    });
     if (res.success) {
       await loadPortalData();
     } else {
-      alert(res.error || "Failed to add staff member.");
+      throw new Error(res.error || "Failed to add staff member.");
     }
   };
 
@@ -406,7 +429,16 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     if (res.success) {
       await loadPortalData();
     } else {
-      alert("Failed to update staff status.");
+      throw new Error(res.error || "Failed to update staff status.");
+    }
+  };
+
+  const handleDeleteStaff = async (id: string) => {
+    const res = await deleteStaffMember(id);
+    if (res.success) {
+      await loadPortalData();
+    } else {
+      throw new Error(res.error || "Failed to delete staff member.");
     }
   };
 
@@ -774,9 +806,12 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
             <AdminPortal
               staff={staff}
               passengers={passengers}
+              auditLogs={auditLogs}
+              adminStats={adminStats}
               onAddStaff={handleAddStaff}
               onToggleStaffStatus={handleToggleStaffStatus}
-              activeSubTab={activeTab as "overview" | "staff" | "passengers"}
+              onDeleteStaff={handleDeleteStaff}
+              activeSubTab={activeTab as "overview" | "staff" | "passengers" | "auditlogs"}
               onSubTabChange={setActiveTab}
             />
           )}
