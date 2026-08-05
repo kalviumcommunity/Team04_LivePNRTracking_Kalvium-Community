@@ -503,7 +503,7 @@ export function StaffPortal({
                 }`}
             >
               <Train className="w-3.5 h-3.5" />
-              Train Passengers
+              {t("trainPassengers")}
             </button>
             <button
               onClick={() => setActiveSubTab("ops")}
@@ -526,7 +526,7 @@ export function StaffPortal({
               }`}
           >
             <Coffee className="w-3.5 h-3.5" />
-            Catering Service
+            {t("cateringService")}
           </button>
         )}
         {userSubRole === "maintenance" && (
@@ -549,7 +549,7 @@ export function StaffPortal({
                 }`}
             >
               <Package className="w-3.5 h-3.5" />
-              Luggage Tracking
+              {t("luggageTracking")}
             </button>
           </>
         )}
@@ -561,16 +561,16 @@ export function StaffPortal({
             }`}
         >
           <Calendar className="w-3.5 h-3.5" />
-          Duty Roster
+          {t("dutyRoster")}
         </button>
       </div>
 
       {/* --- STATION SELECTOR AND COUNTS FOR CORRESPONDING TABS --- */}
       {(activeSubTab === "manifest" || activeSubTab === "catering") && (
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between bg-[#faf8f5]/50 dark:bg-slate-900/10 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between bg-[#faf8f5]/50 dark:bg-slate-900/10 p-3 rounded-xl border border-slate-105 dark:border-slate-800">
           <div>
             <label htmlFor="station-select" className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
-              Filter By Station Manifest:
+              {t("filterByStationManifest")}
             </label>
             <select
               id="station-select"
@@ -586,19 +586,19 @@ export function StaffPortal({
 
               <div className="flex gap-4">
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Total Passengers</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("totalPassengers")}</span>
                   <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100">{totalPassengersCount}</span>
                 </div>
                 <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Boarded</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("boarded")}</span>
                   <span className="text-xl font-extrabold text-emerald-600">{totalBoardedCount}</span>
                 </div>
                 <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Next Station</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("nextStation")}</span>
                   <span className="text-xl font-extrabold text-amber-600">{totalNextStationCount}</span>
                 </div>
                 <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-4">
-                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">Not Boarded</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">{t("notBoarded")}</span>
                   <span className="text-xl font-extrabold text-red-600">{totalNotBoardedCount}</span>
                 </div>
               </div>
@@ -630,15 +630,15 @@ export function StaffPortal({
                         <td className="px-6 py-4">
                           {p.status === "On-Board" || p.status === "Boarded" ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200/50">
-                              Boarded
+                              {t("boarded")}
                             </span>
                           ) : p.status === "Next Station" ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-250/50">
-                              Next Station
+                              {t("nextStation")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-50 text-red-700 border-red-200/50">
-                              Not Boarded
+                              {t("notBoarded")}
                             </span>
                           )}
                         </td>
@@ -646,7 +646,7 @@ export function StaffPortal({
                             {p.status === "On-Board" || p.status === "Boarded" ? (
                               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                                 <Check className="w-4 h-4 text-emerald-500" />
-                                Boarded
+                                {t("boarded")}
                               </span>
                             ) : p.status === "Next Station" ? (
                               <>
@@ -655,14 +655,14 @@ export function StaffPortal({
                                   size="sm"
                                   className="h-7 text-xs px-2.5 font-semibold transition-all border border-emerald-200 text-emerald-600 hover:bg-emerald-50/50 bg-transparent"
                                 >
-                                  Mark Boarded
+                                  {t("markBoarded")}
                                 </Button>
                                 <Button
                                   onClick={() => onUpdatePassengerStatus(p.id, "No Show")}
                                   size="sm"
                                   className="h-7 text-xs px-2.5 font-semibold transition-all border border-red-200 text-red-600 hover:bg-red-50/50 bg-transparent"
                                 >
-                                  Mark Not Boarded
+                                  {t("markNotBoarded")}
                                 </Button>
                               </>
                             ) : (
@@ -672,7 +672,7 @@ export function StaffPortal({
                                   size="sm"
                                   className="h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 shadow-xs"
                                 >
-                                  Reallocate Seat
+                                  {t("reallocateSeat")}
                                 </Button>
                               </>
                             )}
@@ -682,7 +682,7 @@ export function StaffPortal({
                   ) : (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
-                        No passengers boarding at this station.
+                        {t("noPassengersBoarding")}
                       </td>
                     </tr>
                   )}
@@ -702,35 +702,35 @@ export function StaffPortal({
               <CardHeader>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <Volume2 className="w-5 h-5 text-[#c05621]" />
-                  Passenger Broadcast
+                  {t("passengerBroadcast")}
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Send real-time alerts or platform announcements to passengers.
+                  {t("passengerBroadcastDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSendAlert} className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="broadcast-text" className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase">
-                      Alert Message
+                      {t("alertMessage")}
                     </label>
                     <textarea
                       id="broadcast-text"
                       value={alertText}
                       onChange={(e) => setAlertText(e.target.value)}
-                      placeholder="Enter platform change or boarding announcement..."
+                      placeholder={t("alertMessagePlaceholder")}
                       rows={3}
                       className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 text-xs focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:outline-none"
                     />
                   </div>
                   <Button type="submit" disabled={broadcastLoading} className="w-full bg-[#c05621] hover:bg-[#a64819] text-white text-xs h-9 font-semibold gap-1.5 shadow-md">
                     {broadcastLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    Broadcast Announcement
+                    {t("broadcastAnnouncement")}
                   </Button>
 
                   {alertSuccess && (
                     <div className="p-3 rounded-lg border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-xs text-center font-bold">
-                      Announcement broadcasted successfully!
+                      {t("broadcastSuccess")}
                     </div>
                   )}
                 </form>
@@ -742,17 +742,17 @@ export function StaffPortal({
               <CardHeader>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-700 dark:text-amber-500" />
-                  Train Delay Controller
+                  {t("trainDelayController")}
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Update expected delays for PNR timetable status synchronization.
+                  {t("trainDelayControllerDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleUpdateDelay} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label htmlFor="delay-train" className="text-xs font-bold text-slate-500 uppercase">Train Number</label>
+                      <label htmlFor="delay-train" className="text-xs font-bold text-slate-500 uppercase">{t("trainNumber")}</label>
                       <select
                         id="delay-train"
                         value={delayTrain}
@@ -767,28 +767,28 @@ export function StaffPortal({
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="delay-minutes" className="text-xs font-bold text-slate-500 uppercase">Delay Status</label>
+                      <label htmlFor="delay-minutes" className="text-xs font-bold text-slate-500 uppercase">{t("delayStatus")}</label>
                       <select
                         id="delay-minutes"
                         value={delayMinutes}
                         onChange={(e) => setDelayMinutes(e.target.value)}
                         className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs focus:outline-none"
                       >
-                        <option value="0">On Time</option>
-                        <option value="15">15 Mins Delay</option>
-                        <option value="30">30 Mins Delay</option>
-                        <option value="60">60 Mins Delay</option>
+                        <option value="0">{t("onTime")}</option>
+                        <option value="15">15 {t("minsDelay")}</option>
+                        <option value="30">30 {t("minsDelay")}</option>
+                        <option value="60">60 {t("minsDelay")}</option>
                       </select>
                     </div>
                   </div>
                   <Button type="submit" disabled={delayLoading} className="w-full bg-[#c05621] hover:bg-[#a64819] text-white text-xs h-9 font-semibold gap-1.5 shadow-md">
                     {delayLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                    Update Timetable
+                    {t("updateTimetable")}
                   </Button>
 
                   {delaySuccess && (
                     <div className="p-3 rounded-lg border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-xs text-center font-bold">
-                      Delay timing updated successfully!
+                      {t("delayUpdateSuccess")}
                     </div>
                   )}
                 </form>
@@ -802,17 +802,17 @@ export function StaffPortal({
               <CardHeader>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <AlertOctagon className="w-5 h-5 text-red-600" />
-                  Report Incident Log
+                  {t("reportIncidentLog")}
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  File maintenance, technical, medical, or cleanliness issues.
+                  {t("reportIncidentLogDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleIncidentSubmit} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-500">Coach (e.g. A1, B2)</label>
+                      <label className="text-[11px] font-bold text-slate-500">{t("coachLabel")}</label>
                       <Input
                         required
                         placeholder="A1"
@@ -822,7 +822,7 @@ export function StaffPortal({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-500">Seat (Optional)</label>
+                      <label className="text-[11px] font-bold text-slate-500">{t("seatOptional")}</label>
                       <Input
                         placeholder="25"
                         value={incidentForm.seatNo}
@@ -834,39 +834,39 @@ export function StaffPortal({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-500">Category</label>
+                      <label className="text-[11px] font-bold text-slate-500">{t("category")}</label>
                       <select
                         value={incidentForm.category}
                         onChange={(e) => setIncidentForm({ ...incidentForm, category: e.target.value })}
                         className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs focus:outline-none"
                       >
-                        <option value="AC">AC / Heating</option>
-                        <option value="Water">Water Supply</option>
-                        <option value="Medical">Medical Emergency</option>
-                        <option value="Cleanliness">Cleanliness</option>
-                        <option value="Other">Other Issues</option>
+                        <option value="AC">{t("categoryAc")}</option>
+                        <option value="Water">{t("categoryWater")}</option>
+                        <option value="Medical">{t("categoryMedical")}</option>
+                        <option value="Cleanliness">{t("categoryCleanliness")}</option>
+                        <option value="Other">{t("categoryOther")}</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-500">Severity</label>
+                      <label className="text-[11px] font-bold text-slate-500">{t("severity")}</label>
                       <select
                         value={incidentForm.severity}
                         onChange={(e) => setIncidentForm({ ...incidentForm, severity: e.target.value })}
                         className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs focus:outline-none"
                       >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Critical">Critical</option>
+                        <option value="Low">{t("severityLow")}</option>
+                        <option value="Medium">{t("severityMedium")}</option>
+                        <option value="High">{t("severityHigh")}</option>
+                        <option value="Critical">{t("severityCritical")}</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500">Description</label>
+                    <label className="text-[11px] font-bold text-slate-500">{t("description")}</label>
                     <textarea
                       required
-                      placeholder="Specify the issue details..."
+                      placeholder={t("descriptionPlaceholder")}
                       rows={2}
                       value={incidentForm.description}
                       onChange={(e) => setIncidentForm({ ...incidentForm, description: e.target.value })}
@@ -875,7 +875,7 @@ export function StaffPortal({
                   </div>
 
                   <Button type="submit" disabled={incidentSubmitting} className="w-full bg-red-600 hover:bg-red-700 text-white text-xs h-8 font-semibold">
-                    {incidentSubmitting ? "Filing Report..." : "Log Incident"}
+                    {incidentSubmitting ? t("filingReport") : t("logIncident")}
                   </Button>
 
                   {incidentStatusMsg && (
@@ -888,7 +888,7 @@ export function StaffPortal({
             {/* Incidents List */}
             <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/70 dark:bg-slate-950/40 shadow-sm">
               <CardHeader className="py-3">
-                <CardTitle className="text-sm font-bold">Active Incidents (Train {incidentForm.trainNo})</CardTitle>
+                <CardTitle className="text-sm font-bold">{t("activeIncidentsTrain")}{incidentForm.trainNo})</CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4">
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -896,30 +896,30 @@ export function StaffPortal({
                     incidents.map((inc) => (
                       <div key={inc.id} className="p-2 border border-slate-105 rounded bg-slate-50/50 dark:bg-slate-900/30 text-xs">
                         <div className="flex justify-between font-bold">
-                          <span>{inc.category} ({inc.coach}{inc.seatNo ? `/Seat ${inc.seatNo}` : ""})</span>
+                          <span>{inc.category === "AC" ? t("categoryAc") : inc.category === "Water" ? t("categoryWater") : inc.category === "Medical" ? t("categoryMedical") : inc.category === "Cleanliness" ? t("categoryCleanliness") : t("categoryOther")} ({inc.coach}{inc.seatNo ? `/Seat ${inc.seatNo}` : ""})</span>
                           <span className={`px-1.5 py-0.5 rounded text-[10px] ${inc.severity === "Critical" ? "bg-red-100 text-red-850" : "bg-amber-100 text-amber-850"
-                            }`}>{inc.severity}</span>
+                            }`}>{inc.severity === "Low" ? t("severityLow") : inc.severity === "Medium" ? t("severityMedium") : inc.severity === "High" ? t("severityHigh") : t("severityCritical")}</span>
                         </div>
                         <p className="text-slate-600 dark:text-slate-400 mt-1">{inc.description}</p>
-                        <div className="text-[10px] text-slate-400 mt-1.5 flex justify-between items-center">
+                        <div className="text-[10px] text-slate-450 mt-1.5 flex justify-between items-center">
                           <span className={`px-2 py-0.5 rounded-full font-bold ${inc.status === "Resolved"
                               ? "bg-emerald-100 text-emerald-800"
                               : inc.status === "In Progress"
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-amber-100 text-amber-800"
-                            }`}>{inc.status}</span>
+                            }`}>{inc.status === "Resolved" ? t("statusResolved") : inc.status === "In Progress" ? t("statusInProgress") : t("pending")}</span>
                           <button
                             onClick={() => handleUpdateIncidentStatus(inc.id, inc.status)}
                             disabled={incidentLoading}
                             className="text-[10px] px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-slate-600 dark:text-slate-300 transition-colors disabled:opacity-50"
                           >
-                            {inc.status === "Resolved" ? "Re-open" : inc.status === "In Progress" ? "Mark Resolved" : "Start Progress"}
+                            {inc.status === "Resolved" ? t("reopen") : inc.status === "In Progress" ? t("markResolved") : t("startProgress")}
                           </button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-slate-450 text-xs py-4">No logged incidents for this train.</p>
+                    <p className="text-center text-slate-450 text-xs py-4">{t("noIncidentsForTrain")}</p>
                   )}
                 </div>
               </CardContent>
@@ -934,10 +934,10 @@ export function StaffPortal({
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <Coffee className="w-5 h-5 text-amber-705" />
-              On-Board Catering & Meal Services
+              {t("cateringTitle")}
             </CardTitle>
             <CardDescription className="text-xs">
-              Check passenger dietary preferences and track delivered status.
+              {t("cateringDesc")}
             </CardDescription>
           </CardHeader>
           <div className="overflow-x-auto">
@@ -945,10 +945,10 @@ export function StaffPortal({
               <thead>
                 <tr className="bg-[#fcfbf9]/60 dark:bg-slate-900/40 border-b border-[#f2eae1] dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   <th className="px-6 py-3">{t("passengerName")}</th>
-                  <th className="px-6 py-3">Seat</th>
-                  <th className="px-6 py-3">Preference</th>
-                  <th className="px-6 py-3">Meal Status</th>
-                  <th className="px-6 py-3 text-right">Service Action</th>
+                  <th className="px-6 py-3">{t("seat")}</th>
+                  <th className="px-6 py-3">{t("preference")}</th>
+                  <th className="px-6 py-3">{t("mealStatus")}</th>
+                  <th className="px-6 py-3 text-right">{t("serviceAction")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f2eae1] dark:divide-slate-800">
@@ -967,7 +967,7 @@ export function StaffPortal({
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200/50"
                             : "bg-amber-50 text-amber-700 border border-amber-200/50"
                           }`}>
-                          {p.mealStatus || "Pending"}
+                          {p.mealStatus === "Delivered" ? t("delivered") : t("pending")}
                         </span>
                       </td>
                       <td className="px-6 py-3 text-right">
@@ -981,9 +981,9 @@ export function StaffPortal({
                           {updatingMealId === p.id ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
                           ) : p.mealStatus === "Delivered" ? (
-                            "Mark Pending"
+                            t("markPending")
                           ) : (
-                            "Mark Delivered"
+                            t("markDelivered")
                           )}
                         </Button>
                       </td>
@@ -992,7 +992,7 @@ export function StaffPortal({
                 ) : (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
-                      No passengers boarding at this station.
+                      {t("noPassengersBoarding")}
                     </td>
                   </tr>
                 )}
@@ -1010,10 +1010,10 @@ export function StaffPortal({
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-amber-750" />
-                GPS Attendance Log
+                {t("gpsAttendanceLog")}
               </CardTitle>
               <CardDescription className="text-xs">
-                Log duty shifts using real-time geolocation services.
+                {t("gpsAttendanceLogDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1023,8 +1023,8 @@ export function StaffPortal({
                 </div>
                 {attendance ? (
                   <div>
-                    <span className="text-xs font-bold text-emerald-600 block">Duty Check-In Active</span>
-                    <p className="text-[11px] text-slate-450 mt-1">Checked in at {attendance.station} station.</p>
+                    <span className="text-xs font-bold text-emerald-600 block">{t("dutyCheckInActive")}</span>
+                    <p className="text-[11px] text-slate-450 mt-1">{t("checkedInAtStation")}{attendance.station} {t("stationText")}</p>
                     {gpsCoords && (
                       <code className="text-[10px] bg-slate-100 dark:bg-slate-950 p-1 rounded font-mono mt-1 block">
                         Lat: {gpsCoords.lat.toFixed(4)}, Lng: {gpsCoords.lng.toFixed(4)}
@@ -1033,8 +1033,8 @@ export function StaffPortal({
                   </div>
                 ) : (
                   <div>
-                    <span className="text-xs font-bold text-slate-500 block">No Active Check-In</span>
-                    <p className="text-[11px] text-slate-400 mt-1">Please check in when you arrive at your scheduled station.</p>
+                    <span className="text-xs font-bold text-slate-500 block">{t("noActiveCheckIn")}</span>
+                    <p className="text-[11px] text-slate-400 mt-1">{t("checkInPrompt")}</p>
                   </div>
                 )}
 
@@ -1045,7 +1045,7 @@ export function StaffPortal({
                       disabled={attendanceLoading}
                       className="w-full bg-red-600 hover:bg-red-700 text-white text-xs h-9 font-semibold"
                     >
-                      {attendanceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check-Out Shift"}
+                      {attendanceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("checkOutShift")}
                     </Button>
                   ) : (
                     <Button
@@ -1053,7 +1053,7 @@ export function StaffPortal({
                       disabled={attendanceLoading}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9 font-semibold"
                     >
-                      {attendanceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check-In Shift"}
+                      {attendanceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("checkInShift")}
                     </Button>
                   )}
                 </div>
@@ -1065,11 +1065,11 @@ export function StaffPortal({
           <Card className="border border-[#eaddcd] dark:border-slate-800 bg-white/70 dark:bg-slate-950/40 shadow-sm">
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-amber-750" />
-                Duty Shifts
+                <Calendar className="w-5 h-5 text-amber-755" />
+                {t("dutyShifts")}
               </CardTitle>
               <CardDescription className="text-xs">
-                Assigned upcoming station manifests and train duties.
+                {t("dutyShiftsDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -1078,18 +1078,18 @@ export function StaffPortal({
                   shifts.map((s) => (
                     <div key={s.id} className="flex justify-between items-center p-3 border border-slate-105 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 text-xs">
                       <div>
-                        <span className="font-bold text-slate-800 dark:text-slate-100">{s.station} Station</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-100">{s.station} {t("stationText")}</span>
                         <div className="text-[10px] text-slate-450 mt-0.5">
-                          Date: {s.date ? new Date(s.date).toLocaleDateString() : "Today"} | Shift: <span className="font-medium">{s.shiftType || "Morning"}</span>
+                          {t("dateLabel")}: {s.date ? new Date(s.date).toLocaleDateString() : "Today"} | {t("shiftLabel")}: <span className="font-medium">{s.shiftType || "Morning"}</span>
                         </div>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${s.status === "Completed" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"
-                        }`}>{s.status}</span>
+                        }`}>{s.status === "Completed" ? t("completed") : t("pending")}</span>
                     </div>
                   ))
                 ) : (
                   <div className="text-center text-slate-450 text-xs py-8">
-                    No scheduled shifts found. Try adding seed shifts or contact system admin.
+                    {t("noShiftsFound")}
                   </div>
                 )}
               </div>
@@ -1106,22 +1106,22 @@ export function StaffPortal({
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <Package className="w-5 h-5 text-amber-750" />
-                Register Parcel Luggage
+                {t("registerParcelLuggage")}
               </CardTitle>
               <CardDescription className="text-xs">
-                Attach heavy luggage records and weight logs to a passenger PNR.
+                {t("registerParcelLuggageDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLuggageSubmit} className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500">Associate Passenger Booking</label>
+                  <label className="text-[11px] font-bold text-slate-500">{t("associatePassengerBooking")}</label>
                   <select
                     value={luggageForm.bookingId}
                     onChange={(e) => setLuggageForm({ ...luggageForm, bookingId: e.target.value })}
                     className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs focus:outline-none"
                   >
-                    <option value="">Select Passenger...</option>
+                    <option value="">{t("selectPassengerPlaceholder")}</option>
                     {passengers.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name} (PNR: {p.pnr})
@@ -1132,7 +1132,7 @@ export function StaffPortal({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-505">Barcode Identifier</label>
+                    <label className="text-[11px] font-bold text-slate-550">{t("barcodeIdentifier")}</label>
                     <Input
                       required
                       placeholder="LUG102938"
@@ -1142,7 +1142,7 @@ export function StaffPortal({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-505">Weight (kg)</label>
+                    <label className="text-[11px] font-bold text-slate-550">{t("weightKg")}</label>
                     <Input
                       required
                       type="number"
@@ -1156,9 +1156,9 @@ export function StaffPortal({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-505">Description</label>
+                  <label className="text-[11px] font-bold text-slate-550">{t("description")}</label>
                   <Input
-                    placeholder="Fragile items / Heavy suitcase"
+                    placeholder={t("luggageDescriptionPlaceholder")}
                     value={luggageForm.description}
                     onChange={(e) => setLuggageForm({ ...luggageForm, description: e.target.value })}
                     className="text-xs h-9"
@@ -1166,7 +1166,7 @@ export function StaffPortal({
                 </div>
 
                 <Button type="submit" disabled={luggageLoading} className="w-full bg-[#c05621] hover:bg-[#a64819] text-white text-xs h-9 font-semibold">
-                  {luggageLoading ? "Registering..." : "Register Luggage"}
+                  {luggageLoading ? t("registering") : t("registerLuggage")}
                 </Button>
 
                 {luggageStatusMsg && (
@@ -1181,10 +1181,10 @@ export function StaffPortal({
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
                 <Package className="w-5 h-5 text-amber-755" />
-                Luggage Status Board
+                {t("luggageStatusBoard")}
               </CardTitle>
               <CardDescription className="text-xs">
-                Track loaded status of parcel luggage packages.
+                {t("luggageStatusBoardDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -1195,7 +1195,7 @@ export function StaffPortal({
                       <div>
                         <div className="font-bold">{lug.passengerName} (PNR: {lug.pnr})</div>
                         <div className="text-[10px] text-slate-450 mt-0.5">
-                          Barcode: <code className="font-mono bg-slate-100 dark:bg-slate-900 px-1 rounded">{lug.barcode}</code> | Weight: <strong>{lug.weight} kg</strong>
+                          {t("barcode")}: <code className="font-mono bg-slate-100 dark:bg-slate-900 px-1 rounded">{lug.barcode}</code> | {t("weight")}: <strong>{lug.weight} kg</strong>
                         </div>
                         {lug.description && <p className="text-slate-550 mt-1 text-[11px]">{lug.description}</p>}
                         <div className="mt-2 flex gap-1">
@@ -1205,7 +1205,7 @@ export function StaffPortal({
                               onClick={() => handleUpdateLuggage(lug.id, "Loaded")}
                               className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 h-6"
                             >
-                              Load Package
+                              {t("loadPackage")}
                             </Button>
                           )}
                           {lug.status === "Loaded" && (
@@ -1214,7 +1214,7 @@ export function StaffPortal({
                               onClick={() => handleUpdateLuggage(lug.id, "Unloaded")}
                               className="bg-amber-600 text-white text-[10px] px-1.5 py-0.5 h-6"
                             >
-                              Unload Package
+                              {t("unloadPackage")}
                             </Button>
                           )}
                           {lug.status === "Unloaded" && (
@@ -1223,7 +1223,7 @@ export function StaffPortal({
                               onClick={() => handleUpdateLuggage(lug.id, "Delivered")}
                               className="bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 h-6"
                             >
-                              Deliver Package
+                              {t("deliverPackage")}
                             </Button>
                           )}
                         </div>
@@ -1233,11 +1233,11 @@ export function StaffPortal({
                           : lug.status === "Loaded"
                             ? "bg-blue-100 text-blue-800"
                             : "bg-slate-100 text-slate-800"
-                        }`}>{lug.status}</span>
+                        }`}>{lug.status === "Delivered" ? t("delivered") : lug.status === "Loaded" ? t("statusInProgress") : t("pending")}</span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-slate-450 text-xs py-8">No registered luggage found.</p>
+                  <p className="text-center text-slate-450 text-xs py-8">{t("noLuggageFound")}</p>
                 )}
               </div>
             </CardContent>
@@ -1253,15 +1253,15 @@ export function StaffPortal({
               <div>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
                   <Train className="w-5 h-5 text-[#c05621]" />
-                  Train Passenger Manifest
+                  {t("trainPassengerManifest")}
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Select a train to view the complete passenger manifest.
+                  {t("trainPassengerManifestDesc")}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <label htmlFor="train-select" className="text-xs font-bold text-slate-500">
-                  Select Train:
+                  {t("selectTrainLabel")}
                 </label>
                 <select
                   id="train-select"
@@ -1269,7 +1269,7 @@ export function StaffPortal({
                   onChange={(e) => setSelectedTrainNo(e.target.value)}
                   className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
                 >
-                  <option value="">Select...</option>
+                  <option value="">{t("selectPlaceholder")}</option>
                   {trainsList.map((t) => (
                     <option key={t.trainNo} value={t.trainNo}>
                       {t.trainName} (#{t.trainNo})
@@ -1288,12 +1288,12 @@ export function StaffPortal({
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-[#fcfbf9]/60 dark:bg-slate-900/40 border-b border-[#f2eae1] dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                        <th className="px-6 py-4">Passenger Name</th>
+                        <th className="px-6 py-4">{t("passengerNameLabel")}</th>
                         <th className="px-6 py-4">PNR</th>
-                        <th className="px-6 py-4">Route</th>
-                        <th className="px-6 py-4">Seat</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
+                        <th className="px-6 py-4">{t("route")}</th>
+                        <th className="px-6 py-4">{t("seat")}</th>
+                        <th className="px-6 py-4">{t("currentStatus")}</th>
+                        <th className="px-6 py-4 text-right">{t("actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f2eae1] dark:divide-slate-800">
@@ -1308,15 +1308,15 @@ export function StaffPortal({
                           <td className="px-6 py-4">
                             {p.status === "On-Board" || p.status === "Boarded" ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200/50">
-                                Boarded
+                                {t("boarded")}
                               </span>
                             ) : p.status === "Next Station" ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-250/50">
-                                Next Station
+                                {t("nextStation")}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-red-50 text-red-700 border-red-200/50">
-                                Not Boarded
+                                {t("notBoarded")}
                               </span>
                             )}
                           </td>
@@ -1324,7 +1324,7 @@ export function StaffPortal({
                             {p.status === "On-Board" || p.status === "Boarded" ? (
                               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-end gap-1">
                                 <Check className="w-4 h-4 text-emerald-500" />
-                                Boarded
+                                {t("boarded")}
                               </span>
                             ) : p.status === "Next Station" ? (
                               <div className="flex justify-end items-center gap-2">
@@ -1333,14 +1333,14 @@ export function StaffPortal({
                                   size="sm"
                                   className="h-7 text-xs px-2.5 font-semibold transition-all border border-emerald-200 text-emerald-600 hover:bg-emerald-50/50 bg-transparent"
                                 >
-                                  Mark Boarded
+                                  {t("markBoarded")}
                                 </Button>
                                 <Button
                                   onClick={() => handleUpdateTrainPassengerStatus(p.id, "No Show")}
                                   size="sm"
                                   className="h-7 text-xs px-2.5 font-semibold transition-all border border-red-200 text-red-600 hover:bg-red-50/50 bg-transparent"
                                 >
-                                  Mark Not Boarded
+                                  {t("markNotBoarded")}
                                 </Button>
                               </div>
                             ) : (
@@ -1350,7 +1350,7 @@ export function StaffPortal({
                                   size="sm"
                                   className="h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 shadow-xs"
                                 >
-                                  Reallocate Seat
+                                  {t("reallocateSeat")}
                                 </Button>
                               </div>
                             )}
@@ -1362,7 +1362,7 @@ export function StaffPortal({
                 </div>
               ) : (
                 <p className="text-center text-slate-400 py-12 text-xs">
-                  {selectedTrainNo ? "No passenger bookings found for this train." : "Please select a train to view passengers."}
+                  {selectedTrainNo ? t("noBookingsForTrain") : t("selectTrainPrompt")}
                 </p>
               )}
             </CardContent>
@@ -1377,10 +1377,10 @@ export function StaffPortal({
             <CardHeader>
               <CardTitle className="text-base font-extrabold flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-amber-600" />
-                Reallocate Seat {selectedNoShow.seat}
+                {t("reallocateSeatNum")}{selectedNoShow.seat}
               </CardTitle>
               <CardDescription className="text-xs">
-                Passenger <strong>{selectedNoShow.name}</strong> marked as No Show. Select a Waitlisted/RAC passenger on Train {selectedNoShow.trainNo} to allocate this seat.
+                {t("reallocateSeatDescPreName")}<strong>{selectedNoShow.name}</strong>{t("reallocateSeatDescMidName")}<strong>{selectedNoShow.trainNo}</strong>{t("reallocateSeatDescPostTrain")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1407,7 +1407,7 @@ export function StaffPortal({
                         {reallocatingId === wl.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
                         ) : (
-                          "Assign Seat"
+                          t("assignSeat")
                         )}
                       </Button>
                     </div>
@@ -1415,12 +1415,12 @@ export function StaffPortal({
                 </div>
               ) : (
                 <p className="text-xs text-center text-slate-400 py-6">
-                  No waitlisted or RAC passengers found for Train {selectedNoShow.trainNo}.
+                  {t("noWlRacPassengers")}{selectedNoShow.trainNo}.
                 </p>
               )}
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-105">
                 <Button variant="outline" size="sm" onClick={() => setSelectedNoShow(null)} className="text-xs">
-                  Cancel
+                  {t("cancelBtn")}
                 </Button>
               </div>
             </CardContent>

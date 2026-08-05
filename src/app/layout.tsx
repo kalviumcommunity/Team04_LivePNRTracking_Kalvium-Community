@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ixigo - Smart PNR Status Tracker & Railway Portal",
   description: "Real-time IRCTC PNR tracking, booking history, and train status portal.",
+  icons: {
+    icon: "/icon",
+  },
 };
 
 export default function RootLayout({

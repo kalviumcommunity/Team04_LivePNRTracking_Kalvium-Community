@@ -15,7 +15,7 @@ async function getAuthenticatedStaff() {
   });
 
   // Fallback for demo staff users if specific email not found in DB
-  if (!user && (session?.user as any)?.role === "staff") {
+  if (!user && (session?.user as { role?: string })?.role === "staff") {
     user = await db.user.findFirst({
       where: { role: "staff" },
     });
@@ -207,6 +207,13 @@ export async function reallocateSeat(noShowBookingId: string, wlBookingId: strin
           seat: vacantSeat,
           status: "CNF",
           boardingStatus: "Checked In",
+        },
+      }),
+      db.notification.create({
+        data: {
+          title: "Seat Confirmed! 🎉",
+          message: `Your seat has been confirmed to ${vacantSeat} on Train ${wlBooking.trainName} (${wlBooking.trainNo}).`,
+          userId: wlBooking.userId,
         },
       }),
       db.auditLog.create({

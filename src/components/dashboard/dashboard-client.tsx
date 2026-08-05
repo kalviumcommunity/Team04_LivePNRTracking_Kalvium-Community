@@ -246,6 +246,61 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     };
   }, []);
 
+  // Periodically poll for notifications and dispatch alerts based on user preferences
+  useEffect(() => {
+    if (userRole !== "passenger") return;
+    const userKey = session?.user?.email || "default";
+
+    const checkNewNotifications = async () => {
+      try {
+        const latest = await getNotifications();
+        if (latest.length > 0) {
+          setNotifications((prev) => {
+            const prevIds = new Set(prev.map((n) => n.id));
+            const newNotifs = latest.filter((n) => !prevIds.has(n.id));
+
+            if (newNotifs.length > 0 && prev.length > 0) {
+              const pushEnabled = localStorage.getItem(`notify_push_alerts_${userKey}`) === "true";
+              const pnrEnabled = localStorage.getItem(`notify_pnr_updates_${userKey}`) === "true";
+              const delayEnabled = localStorage.getItem(`notify_delay_alerts_${userKey}`) === "true";
+
+              newNotifs.forEach((n) => {
+                const isPnrChange = n.title.toLowerCase().includes("seat") || n.title.toLowerCase().includes("pnr");
+                const isDelayChange = n.title.toLowerCase().includes("delay") || n.title.toLowerCase().includes("alert");
+
+                if ((isPnrChange && pnrEnabled) || (isDelayChange && delayEnabled) || (!isPnrChange && !isDelayChange)) {
+                  if (pushEnabled) {
+                    window.alert(`${n.title}\n\n${n.message}`);
+                    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+                      new Notification(n.title, { body: n.message });
+                    }
+                  }
+
+                  if (localStorage.getItem(`notify_email_alerts_${userKey}`) === "true") {
+                    console.log(`[EMAIL DISPATCH] Sent to ${session?.user?.email}: ${n.title} - ${n.message}`);
+                  }
+                  if (localStorage.getItem(`notify_sms_alerts_${userKey}`) === "true") {
+                    console.log(`[SMS DISPATCH] Sent to user: ${n.title} - ${n.message}`);
+                  }
+                }
+              });
+            }
+            return latest;
+          });
+        }
+      } catch (err) {
+        console.error("Error polling notifications:", err);
+      }
+    };
+
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    const interval = setInterval(checkNewNotifications, 5000);
+    return () => clearInterval(interval);
+  }, [userRole, session?.user?.email]);
+
   // Navigation specs per role
   const getNavigationItems = () => {
     if (userRole === "staff") {
