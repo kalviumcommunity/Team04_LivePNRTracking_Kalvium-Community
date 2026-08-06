@@ -26,13 +26,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        adminKey: { label: "Admin Secret Key", type: "password" },
       },
       async authorize(credentials) {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
+        const adminKey = credentials?.adminKey as string | undefined;
 
         // Ensure credentials are provided
         if (!email || !password) return null;
+
+        const expectedAdminSecret = process.env.ADMIN_SECRET_KEY || "RAILWAY-ADMIN-SECURE-2026";
 
         // 1. Check real users stored in database first
         try {
@@ -43,6 +47,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (user && user.password) {
             const valid = await bcrypt.compare(password, user.password);
             if (valid) {
+              // If user is an admin, enforce Admin Secret Key check
+              if (user.role === "admin") {
+                if (!adminKey || adminKey !== expectedAdminSecret) {
+                  console.warn(`🔒 Admin login rejected for ${email}: Invalid or missing admin key.`);
+                  return null;
+                }
+                return {
+                  id: user.id,
+                  name: user.name,
+                  email: user.email,
+                  role: user.role,
+                  subRole: (user as any).subRole ?? null,
+                  image: user.image,
+                  adminVerified: true,
+                };
+              }
+
               return {
                 id: user.id,
                 name: user.name,
@@ -50,6 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 role: user.role,
                 subRole: (user as any).subRole ?? null,
                 image: user.image,
+                adminVerified: false,
               };
             }
           }
@@ -60,25 +82,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 2. Demo / seed accounts fallback for quick testing
         if (password === "password123") {
           if (email === "demo@railwaypnr.com") {
-            return { id: "1", name: "Demo User", email: "demo@railwaypnr.com", role: "passenger", subRole: null };
+            return { id: "1", name: "Demo User", email: "demo@railwaypnr.com", role: "passenger", subRole: null, adminVerified: false };
           }
           if (email === "passenger@railwaypnr.com") {
-            return { id: "4", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger", subRole: null };
+            return { id: "4", name: "Ramesh Rathore", email: "passenger@railwaypnr.com", role: "passenger", subRole: null, adminVerified: false };
           }
           if (email === "staff@railwaypnr.com") {
-            return { id: "2", name: "Sanjay Sharma", email: "staff@railwaypnr.com", role: "staff", subRole: "ttr" };
+            return { id: "2", name: "Sanjay Sharma", email: "staff@railwaypnr.com", role: "staff", subRole: "ttr", adminVerified: false };
           }
           if (email === "ttr@railwaypnr.com") {
-            return { id: "ttr", name: "TTR Officer", email: "ttr@railwaypnr.com", role: "staff", subRole: "ttr" };
+            return { id: "ttr", name: "TTR Officer", email: "ttr@railwaypnr.com", role: "staff", subRole: "ttr", adminVerified: false };
           }
           if (email === "pantry@railwaypnr.com") {
-            return { id: "pantry", name: "Pantry Manager", email: "pantry@railwaypnr.com", role: "staff", subRole: "pantry" };
+            return { id: "pantry", name: "Pantry Manager", email: "pantry@railwaypnr.com", role: "staff", subRole: "pantry", adminVerified: false };
           }
           if (email === "maintenance@railwaypnr.com") {
-            return { id: "maintenance", name: "Maintenance Engineer", email: "maintenance@railwaypnr.com", role: "staff", subRole: "maintenance" };
+            return { id: "maintenance", name: "Maintenance Engineer", email: "maintenance@railwaypnr.com", role: "staff", subRole: "maintenance", adminVerified: false };
           }
           if (email === "admin@railwaypnr.com") {
-            return { id: "3", name: "Priyanka Rathore", email: "admin@railwaypnr.com", role: "admin", subRole: null };
+            if (!adminKey || adminKey !== expectedAdminSecret) {
+              console.warn("🔒 Demo admin login rejected: Invalid or missing admin key.");
+              return null;
+            }
+            return { id: "3", name: "Priyanka Rathore", email: "admin@railwaypnr.com", role: "admin", subRole: null, adminVerified: true };
           }
         }
 
@@ -89,23 +115,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     /**
      * JWT callback is invoked when JSON Web Token is created or updated.
-     * We persist custom fields like the user role here.
+     * We persist custom fields like the user role and adminVerified state here.
      */
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as { role?: string }).role ?? "passenger";
         token.subRole = (user as { subRole?: string | null }).subRole ?? null;
+        token.adminVerified = (user as { adminVerified?: boolean }).adminVerified ?? false;
       }
       return token;
     },
     /**
      * Session callback is invoked when a session is checked.
-     * Copies the role from token (from jwt callback) onto the session.user object.
+     * Copies role and adminVerified flag from token onto session.user.
      */
     async session({ session, token }) {
       if (session.user) {
         (session.user as { role?: string }).role = (token.role as string) ?? "passenger";
         (session.user as { subRole?: string | null }).subRole = (token.subRole as string | null) ?? null;
+        (session.user as { adminVerified?: boolean }).adminVerified = (token.adminVerified as boolean) ?? false;
       }
       return session;
     },

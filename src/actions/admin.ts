@@ -12,6 +12,13 @@ async function getAuthenticatedAdmin() {
     throw new Error("Unauthorized: Please sign in.");
   }
 
+  const sessionRole = (session.user as { role?: string }).role;
+  const adminVerified = (session.user as { adminVerified?: boolean }).adminVerified;
+
+  if (sessionRole !== "admin" || !adminVerified) {
+    throw new Error("Unauthorized: Verified administrator access required.");
+  }
+
   // Attempt to find the user in the database by email
   let user = await db.user.findUnique({
     where: { email: session.user.email },
@@ -19,7 +26,7 @@ async function getAuthenticatedAdmin() {
 
   // Fallback: If DB record missing but session role is "admin" (e.g. demo seeded user
   // whose ID diverges from the hardcoded fallback), look up by role.
-  if (!user && (session.user as { role?: string }).role === "admin") {
+  if (!user && sessionRole === "admin") {
     user = await db.user.findFirst({
       where: { role: "admin" },
     });
