@@ -38,16 +38,17 @@ export const authConfig: NextAuthConfig = {
         return false; // Redirect unauthenticated users to /login
       }
 
-      // Extract role from the JWT token (populated in auth.ts jwt callback)
+      // Extract role and adminVerified status from the JWT token
       const role = (auth as { user?: { role?: string } })?.user?.role ?? "passenger";
+      const adminVerified = (auth as { user?: { adminVerified?: boolean } })?.user?.adminVerified ?? false;
 
       // ── Admin-only tab routes ──
-      // Only admins can access /dashboard/overview, /dashboard/staff, /dashboard/passengers, /dashboard/auditlogs
+      // Only authenticated admins with verified secret key can access admin routes
       const adminOnlyTabs = ["/dashboard/overview", "/dashboard/staff", "/dashboard/passengers", "/dashboard/auditlogs"];
       const isAdminTab = adminOnlyTabs.some((tab) => pathname.startsWith(tab));
 
-      if (isAdminTab && role !== "admin") {
-        // Redirect non-admins away from admin tabs to their own default
+      if (isAdminTab && (role !== "admin" || !adminVerified)) {
+        // Redirect non-admins or unverified admins away from admin tabs to default
         const defaultTab =
           role === "staff"
             ? "/dashboard/manifest"
