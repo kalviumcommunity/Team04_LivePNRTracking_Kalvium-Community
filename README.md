@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚄 Ixigo Live PNR Status Tracker & Railway Platform
 
-## Getting Started
+A production-grade, cloud-native Railway PNR Tracking and Operations Management Platform inspired by Ixigo, built with **Next.js 15+ (App Router)**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **Auth.js v5**, **Prisma ORM**, and **Docker**.
 
-First, run the development server:
+---
 
+## 🌟 Key Features & Capabilities
+
+### 👨‍✈️ 1. Multi-Role Portal System
+* **Passengers**: Search live PNR, auto live polling (30s interval), book tickets, view paginated booking history, download print-ready PDF statements, export Excel CSVs, manage saved favorites, 2FA TOTP security, and multi-language support (10 languages).
+* **Train Ticket Examiner (TTR)**: Access station passenger manifest, check-in passengers, manage coach seat charts, and re-allocate vacant seats from no-show passengers to waitlisted tickets.
+* **Pantry Manager**: Track passenger meal preferences (Veg / Non-Veg / Jain) and update meal delivery status.
+* **Maintenance Engineer**: Track train operations, log equipment/coach incidents with severity levels, and manage luggage parcel barcodes.
+* **System Administrator**: Monitor platform analytics, manage staff accounts with sub-role assignments, toggle active status, cascade account deletions, monitor live passenger bookings, and review full system audit logs.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Framework**: Next.js 15+ (App Router, Server Actions, Edge Middleware)
+* **UI & Styling**: React 19, Tailwind CSS v4, Lucide Icons, Glassmorphism Aesthetics
+* **Authentication**: Auth.js (NextAuth v5), Credentials, Google OAuth, 2FA TOTP Verification
+* **Database**: Prisma ORM (SQLite for Dev, PostgreSQL ready for Docker / Cloud Run)
+* **Testing & Quality**: Vitest, ESLint, Strict TypeScript (`tsc --noEmit`)
+* **Containerization & CI/CD**: Docker (Multi-stage build), Docker Compose, GitHub Actions
+
+---
+
+## 🔑 Demo Account Credentials (Password: `password123`)
+
+| Role | Email | Sub-Role / Access |
+| :--- | :--- | :--- |
+| **Passenger** | `demo@railwaypnr.com` | Full Passenger Features |
+| **Admin** | `admin@railwaypnr.com` | System Admin (Key: `RAILWAY-ADMIN-SECURE-2026`) |
+| **TTR Officer** | `ttr@railwaypnr.com` | Station Manifest & Waitlist Seat Re-allocation |
+| **Pantry Manager** | `pantry@railwaypnr.com` | Catering & Meal Delivery Management |
+| **Maintenance Engineer** | `maintenance@railwaypnr.com` | Operations, Incidents & Luggage Tracking |
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. Prerequisites
+- Node.js 20+
+- npm or yarn
+
+### 2. Environment Setup
+Copy the `.env.example` template:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Installation & Database Setup
+```bash
+# Install dependencies
+npm install
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Push database schema
+npx prisma db push
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Seed initial database records
+npx prisma db seed
+```
 
-## Learn More
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧪 Testing & Code Quality
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Run unit tests with Vitest
+npm test
 
-## Deploy on Vercel
+# Run TypeScript type check
+npx tsc --noEmit
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Run ESLint check
+npm run lint
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🐳 Docker Deployment
+
+To run the application along with PostgreSQL in Docker containers:
+
+```bash
+# Build and start containers in detached mode
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f app
+```
+The app will be accessible at `http://localhost:3001`.
+
+---
+
+## 🌐 API Reference
+
+### `GET /api/pnr/[pnr]`
+Fetch real-time status details for a 10-digit numeric PNR.
+
+**Sample Request**:
+```bash
+curl -X GET http://localhost:3001/api/pnr/4109857123
+```
+
+**Sample Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "pnr": "4109857123",
+    "trainName": "Rajdhani Express",
+    "trainNo": "12425",
+    "from": "New Delhi",
+    "fromCode": "NDLS",
+    "to": "Kanpur Central",
+    "toCode": "CNB",
+    "departureTime": "16:55",
+    "arrivalTime": "21:45",
+    "date": "23 Dec 2026",
+    "class": "AC 3 Tier (3A)",
+    "chartStatus": "Chart Prepared",
+    "platform": "Platform 16",
+    "delayStatus": "On Time",
+    "lastUpdated": "2026-08-07T08:00:00.000Z",
+    "passengers": [
+      { "name": "Ramesh Rathore", "bookingStatus": "CNF / A1 / 25", "currentStatus": "CNF" }
+    ]
+  }
+}
+```
+
+---
+
+## 📄 License
+Licensed under the MIT License.

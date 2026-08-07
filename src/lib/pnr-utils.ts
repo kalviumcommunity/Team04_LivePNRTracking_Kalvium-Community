@@ -99,3 +99,25 @@ export function getPnrMetadata(
     toCode: "MMCT",
   };
 }
+
+export function isValidPnr(pnr: string): boolean {
+  return /^\d{10}$/.test(pnr);
+}
+
+export function formatPnr(pnr: string): string {
+  if (!isValidPnr(pnr)) return pnr;
+  return `${pnr.slice(0, 3)}-${pnr.slice(3, 6)}-${pnr.slice(6)}`;
+}
+
+export function getSeatClassBadge(travelClass: string): string {
+  if (travelClass.includes("1A") || travelClass.includes("Executive")) {
+    return "bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200";
+  }
+  if (travelClass.includes("2A")) {
+    return "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 border-indigo-200";
+  }
+  if (travelClass.includes("3A")) {
+    return "bg-[#c05621]/10 text-[#c05621] dark:bg-orange-950/40 dark:text-orange-300 border-amber-200";
+  }
+  return "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200";
+}

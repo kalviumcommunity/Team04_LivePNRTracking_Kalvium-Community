@@ -1,5 +1,4 @@
 import type { NextAuthConfig } from "next-auth";
-import type { JWT } from "next-auth/jwt";
 
 /**
  * Edge-compatible authentication configuration for NextAuth.
@@ -44,7 +43,7 @@ export const authConfig: NextAuthConfig = {
 
       // ── Admin-only tab routes ──
       // Only authenticated admins with verified secret key can access admin routes
-      const adminOnlyTabs = ["/dashboard/overview", "/dashboard/staff", "/dashboard/passengers", "/dashboard/auditlogs"];
+      const adminOnlyTabs = ["/dashboard/staff", "/dashboard/passengers", "/dashboard/auditlogs"];
       const isAdminTab = adminOnlyTabs.some((tab) => pathname.startsWith(tab));
 
       if (isAdminTab && (role !== "admin" || !adminVerified)) {
