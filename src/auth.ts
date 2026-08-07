@@ -58,7 +58,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   name: user.name,
                   email: user.email,
                   role: user.role,
-                  subRole: (user as any).subRole ?? null,
+                  subRole: (user as { subRole?: string | null }).subRole ?? null,
                   image: user.image,
                   adminVerified: true,
                 };
@@ -69,7 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                subRole: (user as any).subRole ?? null,
+                subRole: (user as { subRole?: string | null }).subRole ?? null,
                 image: user.image,
                 adminVerified: false,
               };

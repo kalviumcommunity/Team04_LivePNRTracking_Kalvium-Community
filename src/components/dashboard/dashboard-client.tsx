@@ -63,40 +63,41 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const userSubRole = session?.user?.subRole || null;
   
   // Validate initialTab against userRole to prevent blank screens on unauthorized tab URLs
-  const staffTabs = ["manifest", "trainPassengers", "ops", "catering", "attendance", "luggage"];
-  const adminTabs = ["overview", "staff", "passengers", "auditlogs"];
+  const passengerTabs = ["overview", "book", "pnr", "history", "favorites", "settings"];
+  const adminTabs = ["overview", "staff", "passengers", "auditlogs", "settings"];
 
   const getValidTab = (requestedTab?: string) => {
+    const cleanTab = requestedTab ? requestedTab.split("?")[0] : "";
     if (userRole === "passenger") {
-      if (!requestedTab || staffTabs.includes(requestedTab) || adminTabs.includes(requestedTab)) {
+      if (!cleanTab || !passengerTabs.includes(cleanTab)) {
         return "overview";
       }
-      return requestedTab;
+      return requestedTab || "overview";
     }
     if (userRole === "admin") {
-      if (!requestedTab || !adminTabs.includes(requestedTab)) {
+      if (!cleanTab || !adminTabs.includes(cleanTab)) {
         return "overview";
       }
-      return requestedTab;
+      return requestedTab || "overview";
     }
     if (userRole === "staff") {
-      let allowedTabs = ["attendance", "pnr"];
+      let allowedTabs = ["attendance", "pnr", "settings"];
       let defaultTab = "manifest";
       if (!userSubRole || userSubRole === "ttr") {
-        allowedTabs = ["manifest", "trainPassengers", "ops", "attendance"];
+        allowedTabs = ["manifest", "trainPassengers", "ops", "attendance", "settings"];
         defaultTab = "manifest";
       } else if (userSubRole === "pantry") {
-        allowedTabs = ["catering", "attendance"];
+        allowedTabs = ["catering", "attendance", "settings"];
         defaultTab = "catering";
       } else if (userSubRole === "maintenance") {
-        allowedTabs = ["ops", "attendance", "luggage", "pnr"];
+        allowedTabs = ["ops", "attendance", "luggage", "pnr", "settings"];
         defaultTab = "ops";
       }
       
-      if (!requestedTab || !allowedTabs.includes(requestedTab)) {
+      if (!cleanTab || !allowedTabs.includes(cleanTab)) {
         return defaultTab;
       }
-      return requestedTab;
+      return requestedTab || defaultTab;
     }
     return requestedTab || "overview";
   };
