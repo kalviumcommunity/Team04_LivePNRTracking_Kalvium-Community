@@ -79,9 +79,9 @@ export function DashboardOverview({
   return (
     <div className="space-y-6">
       {/* 1. Welcome Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#c05621] via-amber-700 to-amber-800 text-white p-6 sm:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#c05621] via-amber-700 to-amber-800 text-white p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="absolute right-[-5%] top-[-20%] w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="relative z-10 space-y-3">
+        <div className="relative z-10 space-y-3 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase tracking-wider text-amber-100">
             <Sparkles className="w-3.5 h-3.5" />
             {userRole.charAt(0).toUpperCase() + userRole.slice(1)} {t("portalActiveLabel")}
@@ -89,7 +89,7 @@ export function DashboardOverview({
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             {t("welcomeBack")}, {userName}!
           </h1>
-          <p className="text-xs sm:text-sm text-amber-100 max-w-xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-amber-100 leading-relaxed">
             Your live PNR tracker is actively monitoring <span className="font-bold underline">Rajdhani Express (12425)</span>. Current Status: <span className="bg-emerald-500/30 px-2 py-0.5 rounded text-white font-bold">On Time</span>.
           </p>
           <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -106,6 +106,13 @@ export function DashboardOverview({
               {t("viewSavedFavorites")}
             </button>
           </div>
+        </div>
+        <div className="relative z-10 hidden md:block shrink-0">
+          <img 
+            src="/train_dashboard.png" 
+            alt="Vintage Train Station" 
+            className="w-96 h-56 object-contain opacity-95 hover:opacity-100 hover:scale-105 transition-all duration-300 drop-shadow-2xl mix-blend-screen"
+          />
         </div>
       </div>
 
