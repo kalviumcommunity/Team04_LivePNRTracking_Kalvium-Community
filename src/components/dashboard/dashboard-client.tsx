@@ -170,8 +170,10 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   useEffect(() => {
     if (session?.user?.email) {
       const savedName = localStorage.getItem(`profile_name_${session.user.email}`);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (savedName) setUserName(savedName);
       const savedEmail = localStorage.getItem(`profile_email_${session.user.email}`);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (savedEmail) setUserEmail(savedEmail);
     }
   }, [session?.user?.email]);
