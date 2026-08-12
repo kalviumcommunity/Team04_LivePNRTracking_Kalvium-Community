@@ -4,7 +4,17 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
+/**
+ * ============================================================================
+ * STAFF SERVER ACTIONS (TTE, Pantry Manager, Maintenance Engineer)
+ * ============================================================================
+ * This file contains Next.js 15 Server Actions ('use server') for railway staff.
+ * It handles station passenger manifests, boarding check-ins, waitlist seat
+ * re-allocations, catering meal preferences, incident reporting, and luggage tracking.
+ */
+
 // Helper to authenticate staff user and return DB record
+// Ensures that only users with 'staff' or 'admin' role can access these functions
 async function getAuthenticatedStaff() {
   const session = await auth();
   if (!session?.user?.email) {
@@ -21,13 +31,18 @@ async function getAuthenticatedStaff() {
     });
   }
 
+  // Security Check: Block non-staff and non-admin users
   if (!user || (user.role !== "staff" && user.role !== "admin")) {
     throw new Error("Unauthorized: Staff access required.");
   }
   return user;
 }
 
-// 1. Get Station Manifest Passengers
+/**
+ * 1. Get Station Manifest Passengers
+ * Fetches all passenger bookings for a specific station within a ±2 day date window.
+ * Used by TTE Officers on station platforms to review upcoming passenger lists.
+ */
 export async function getManifest(station: string) {
   try {
     await getAuthenticatedStaff();
@@ -39,6 +54,7 @@ export async function getManifest(station: string) {
     const windowEnd = new Date(now);
     windowEnd.setDate(now.getDate() + 2);
 
+    // Query database via Prisma ORM
     const bookings = await db.booking.findMany({
       where: {
         fromStation: station,
@@ -55,6 +71,7 @@ export async function getManifest(station: string) {
       orderBy: { createdAt: "desc" },
     });
 
+    // Transform database records into clean UI structure
     return bookings.map((b) => ({
       id: b.id,
       name: b.passengerName || b.user?.name || "Premium Passenger",
@@ -153,7 +170,18 @@ export async function broadcastOpsAlert(data: {
   }
 }
 
-// 4. Waitlisted Passengers & Seat Re-allocation
+/**
+ * 4. Waitlist Seat Re-allocation Engine (Core Feature!)
+ * Triggered when a TTE marks a passenger as "No-Show".
+ * 
+ * Logic Workflow:
+ * 1. Releases the vacant seat from the absent passenger.
+ * 2. Upgrades the top Waitlisted (WL) passenger to Confirmed (CNF).
+ * 3. Assigns the vacant berth to the waitlisted passenger.
+ * 4. Sends a real-time notification to the waitlisted passenger's app.
+ * 5. Records an immutable audit log entry.
+ * All 4 updates run inside an atomic database transaction (`db.$transaction`).
+ */
 export async function getWaitlistPassengers(trainNo: string) {
   try {
     await getAuthenticatedStaff();
@@ -182,25 +210,33 @@ export async function getWaitlistPassengers(trainNo: string) {
 
 export async function reallocateSeat(noShowBookingId: string, wlBookingId: string) {
   try {
+    // Step A: Security Check - Ensure user is authenticated staff
     const staff = await getAuthenticatedStaff();
 
+    // Step B: Look up the missing passenger's booking
     const noShowBooking = await db.booking.findUnique({
       where: { id: noShowBookingId },
     });
     if (!noShowBooking) throw new Error("No-show booking not found.");
 
+    // Step C: Look up the waitlisted passenger's booking
     const wlBooking = await db.booking.findUnique({
       where: { id: wlBookingId },
     });
     if (!wlBooking) throw new Error("Waitlist booking not found.");
 
+    // Get the vacant seat string (e.g., "B2/25")
     const vacantSeat = noShowBooking.seat;
 
+    // Step D: Execute atomic database transaction
+    // If any operation inside fails, the entire transaction is rolled back safely
     await db.$transaction([
+      // 1. Mark missing passenger as "No Show"
       db.booking.update({
         where: { id: noShowBookingId },
         data: { boardingStatus: "No Show" },
       }),
+      // 2. Upgrade waitlisted passenger to Confirmed (CNF) & assign vacant seat
       db.booking.update({
         where: { id: wlBookingId },
         data: {
@@ -209,6 +245,7 @@ export async function reallocateSeat(noShowBookingId: string, wlBookingId: strin
           boardingStatus: "Checked In",
         },
       }),
+      // 3. Create real-time notification for the upgraded passenger
       db.notification.create({
         data: {
           title: "Seat Confirmed! 🎉",
@@ -216,6 +253,7 @@ export async function reallocateSeat(noShowBookingId: string, wlBookingId: strin
           userId: wlBooking.userId,
         },
       }),
+      // 4. Record security audit log entry
       db.auditLog.create({
         data: {
           action: "SEAT_REALLOCATION",
@@ -225,6 +263,7 @@ export async function reallocateSeat(noShowBookingId: string, wlBookingId: strin
       }),
     ]);
 
+    // Step E: Purge server cache so UI updates instantly
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error: unknown) {
@@ -290,7 +329,20 @@ export async function reportIncident(data: {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, incident };
+    return {
+      success: true,
+      incident: {
+        id: incident.id,
+        trainNo: incident.trainNo,
+        coach: incident.coach,
+        seatNo: incident.seatNo || "",
+        category: incident.category,
+        description: incident.description,
+        severity: incident.severity,
+        status: incident.status,
+        createdAt: incident.createdAt.toISOString(),
+      },
+    };
   } catch (error: unknown) {
     console.error("[REPORT_INCIDENT]", error);
     return { error: (error as Error).message || "Failed to report incident." };
@@ -319,7 +371,7 @@ export async function getIncidents(trainNo: string) {
       status: i.status,
       severity: i.severity,
       reporterName: i.user?.name || "Staff Member",
-      createdAt: i.createdAt,
+      createdAt: i.createdAt.toISOString(),
     }));
   } catch (error) {
     console.error("[GET_INCIDENTS]", error);
@@ -360,7 +412,14 @@ export async function checkInAttendance(latitude: number, longitude: number, sta
     });
 
     revalidatePath("/dashboard");
-    return { success: true, attendance };
+    return {
+      success: true,
+      attendance: {
+        id: attendance.id,
+        checkIn: attendance.checkIn.toISOString(),
+        station: attendance.station,
+      },
+    };
   } catch (error: unknown) {
     console.error("[CHECKIN_ATTENDANCE]", error);
     return { error: (error as Error).message || "Failed to check in." };
@@ -396,7 +455,15 @@ export async function checkOutAttendance() {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, attendance };
+    return {
+      success: true,
+      attendance: {
+        id: attendance.id,
+        checkIn: attendance.checkIn.toISOString(),
+        checkOut: attendance.checkOut ? attendance.checkOut.toISOString() : null,
+        station: attendance.station,
+      },
+    };
   } catch (error: unknown) {
     console.error("[CHECKOUT_ATTENDANCE]", error);
     return { error: (error as Error).message || "Failed to check out." };
@@ -450,7 +517,18 @@ export async function registerLuggage(data: {
       },
     });
 
-    revalidatePath("/dashboard");    return { success: true, luggage };
+    revalidatePath("/dashboard");
+    return {
+      success: true,
+      luggage: {
+        id: luggage.id,
+        bookingId: luggage.bookingId,
+        barcode: luggage.barcode,
+        weight: luggage.weight,
+        description: luggage.description || "",
+        status: luggage.status,
+      },
+    };
   } catch (error: unknown) {
     console.error("[REGISTER_LUGGAGE]", error);
     return { error: (error as Error).message || "Failed to register luggage." };
@@ -474,7 +552,17 @@ export async function updateLuggageStatus(luggageId: string, status: string) {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, luggage };
+    return {
+      success: true,
+      luggage: {
+        id: luggage.id,
+        bookingId: luggage.bookingId,
+        barcode: luggage.barcode,
+        weight: luggage.weight,
+        description: luggage.description || "",
+        status: luggage.status,
+      },
+    };
   } catch (error: unknown) {
     console.error("[UPDATE_LUGGAGE_STATUS]", error);
     return { error: (error as Error).message || "Failed to update luggage status." };
@@ -577,7 +665,13 @@ export async function updateIncidentStatus(
     });
 
     revalidatePath("/dashboard");
-    return { success: true, incident };
+    return {
+      success: true,
+      incident: {
+        id: incident.id,
+        status: incident.status,
+      },
+    };
   } catch (error: unknown) {
     console.error("[UPDATE_INCIDENT_STATUS]", error);
     return { error: (error as Error).message || "Failed to update incident status." };
@@ -606,6 +700,3 @@ export async function getActiveAttendance() {
     return null;
   }
 }
-
-
-

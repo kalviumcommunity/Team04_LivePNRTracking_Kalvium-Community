@@ -4,6 +4,14 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
+/**
+ * ============================================================================
+ * PASSENGER SERVER ACTIONS
+ * ============================================================================
+ * Handles passenger ticket booking, fetching user bookings, pinning favorite
+ * PNRs, logging recent searches, and fetching real-time notifications.
+ */
+
 // Helper to authenticate user and return DB record
 async function getAuthenticatedUser() {
   const session = await auth();
@@ -58,7 +66,7 @@ export async function getDashboardMetrics() {
   }
 }
 
-// 2. Fetch Passenger Bookings
+// 2. Fetch Passenger Bookings (History & Active Tickets)
 export async function getBookings() {
   try {
     const user = await getAuthenticatedUser();
@@ -104,7 +112,11 @@ export async function getBookings() {
   }
 }
 
-// 3. Book a Ticket
+/**
+ * 3. Book a Ticket (Passenger Booking Engine)
+ * Generates a unique 10-digit PNR, assigns coach & seat berth,
+ * creates a Booking record in Prisma DB, and logs an AuditLog entry.
+ */
 export async function bookTicket(data: {
   trainName: string;
   trainNo: string;
@@ -118,16 +130,15 @@ export async function bookTicket(data: {
   try {
     const user = await getAuthenticatedUser();
 
-    // Generate random 10-digit PNR
+    // Step A: Generate random unique 10-digit PNR string
     const randomPnr = Math.floor(1000000000 + Math.random() * 9000000000).toString();
 
-    // Generate random seat (e.g. A2/12)
+    // Step B: Calculate coach prefix (A1/B2/S1) & seat berth number
     const coach = data.travelClass.includes("3A") ? "B2" : data.travelClass.includes("2A") ? "A1" : "S1";
     const seatNo = Math.floor(Math.random() * 64) + 1;
     const seatString = `${coach}/${seatNo}`;
 
-    // generic class booking logic
-
+    // Step C: Create Booking record in PostgreSQL/SQLite database via Prisma ORM
     const booking = await db.booking.create({
       data: {
         pnr: randomPnr,
@@ -144,7 +155,7 @@ export async function bookTicket(data: {
       },
     });
 
-    // Log the action to AuditLog
+    // Step D: Write immutable security Audit Log entry
     await db.auditLog.create({
       data: {
         action: "BOOK_TICKET",
@@ -153,8 +164,23 @@ export async function bookTicket(data: {
       },
     });
 
+    // Step E: Purge Next.js server cache to update dashboard instantly
     revalidatePath("/dashboard");
-    return { success: true, booking };
+    return {
+      success: true,
+      booking: {
+        pnr: booking.pnr,
+        trainName: booking.trainName,
+        trainNo: booking.trainNo,
+        fromStation: booking.fromStation,
+        toStation: booking.toStation,
+        seat: booking.seat || "",
+        boardingStatus: booking.boardingStatus,
+        passengerName: booking.passengerName || "",
+        status: booking.status,
+        dateOfJourney: booking.dateOfJourney.toISOString(),
+      },
+    };
   } catch (error: unknown) {
     console.error("[BOOK_TICKET]", error);
     return { error: (error as Error).message || "Failed to book ticket." };
@@ -203,7 +229,14 @@ export async function addFavorite(pnr: string, label: string) {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, fav };
+    return {
+      success: true,
+      fav: {
+        id: fav.id,
+        pnr: fav.pnr,
+        label: fav.label || "Pinned Route",
+      },
+    };
   } catch (error: unknown) {
     console.error("[ADD_FAVORITE]", error);
     return { error: (error as Error).message || "Failed to save favorite PNR." };

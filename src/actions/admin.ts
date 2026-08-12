@@ -170,7 +170,18 @@ export async function addStaffMember(data: {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, staff: newStaff };
+    return {
+      success: true,
+      staff: {
+        id: newStaff.id,
+        name: newStaff.name || "",
+        email: newStaff.email || "",
+        role: newStaff.role as "staff" | "admin",
+        subRole: newStaff.subRole ?? null,
+        status: newStaff.active ? ("Active" as const) : ("Inactive" as const),
+        station: newStaff.station || "New Delhi (NDLS)",
+      },
+    };
   } catch (error: unknown) {
     console.error("[ADD_STAFF_MEMBER]", error);
     return { error: (error as Error).message || "Failed to create staff account." };

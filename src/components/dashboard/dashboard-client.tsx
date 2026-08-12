@@ -165,16 +165,14 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   const [showCallToast, setShowCallToast] = useState(false);
 
   const [userName, setUserName] = useState<string>(() => {
-    if (typeof window !== "undefined" && session?.user?.email) {
-      const savedName = localStorage.getItem(`profile_name_${session.user.email}`);
-      if (savedName) return savedName;
+    if (session?.user?.email && typeof window !== "undefined") {
+      return localStorage.getItem(`profile_name_${session.user.email}`) || session.user.name || "Demo User";
     }
     return session?.user?.name || "Demo User";
   });
   const [userEmail, setUserEmail] = useState<string>(() => {
-    if (typeof window !== "undefined" && session?.user?.email) {
-      const savedEmail = localStorage.getItem(`profile_email_${session.user.email}`);
-      if (savedEmail) return savedEmail;
+    if (session?.user?.email && typeof window !== "undefined") {
+      return localStorage.getItem(`profile_email_${session.user.email}`) || session.user.email || "demo@railwaypnr.com";
     }
     return session?.user?.email || "demo@railwaypnr.com";
   });
@@ -252,7 +250,9 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, selectedStation]);
 
-  const [currentLang, setCurrentLang] = useState<LanguageCode>(() => getSavedLanguage());
+  const [currentLang, setCurrentLang] = useState<LanguageCode>(() =>
+    typeof window !== "undefined" ? getSavedLanguage() : "en"
+  );
 
   useEffect(() => {
     const handleLangChange = (e: CustomEvent<LanguageCode>) => {

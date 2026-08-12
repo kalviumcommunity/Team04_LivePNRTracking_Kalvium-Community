@@ -2807,13 +2807,15 @@ export function setSavedLanguage(code: LanguageCode) {
 }
 
 export function t(key: string, lang?: LanguageCode): string {
-  const currentLang = lang || getSavedLanguage();
+  const currentLang = lang || "en";
   const langDict = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   return langDict[key] || TRANSLATIONS.en[key] || key;
 }
 
 export function useTranslation() {
-  const [lang, setLang] = useState<LanguageCode>(() => getSavedLanguage());
+  const [lang, setLang] = useState<LanguageCode>(() =>
+    typeof window !== "undefined" ? getSavedLanguage() : "en"
+  );
 
   useEffect(() => {
     const handleLangChange = (e: CustomEvent<LanguageCode>) => {
