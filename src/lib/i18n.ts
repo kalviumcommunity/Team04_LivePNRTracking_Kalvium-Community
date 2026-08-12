@@ -2813,10 +2813,11 @@ export function t(key: string, lang?: LanguageCode): string {
 }
 
 export function useTranslation() {
-  const [lang, setLang] = useState<LanguageCode>("en");
+  const [lang, setLang] = useState<LanguageCode>(() =>
+    typeof window !== "undefined" ? getSavedLanguage() : "en"
+  );
 
   useEffect(() => {
-    setLang(getSavedLanguage());
     const handleLangChange = (e: CustomEvent<LanguageCode>) => {
       setLang(e.detail);
     };

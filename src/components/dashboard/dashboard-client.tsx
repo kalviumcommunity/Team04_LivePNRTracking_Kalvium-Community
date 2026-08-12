@@ -164,19 +164,18 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
   ]);
   const [showCallToast, setShowCallToast] = useState(false);
 
-  const [userName, setUserName] = useState<string>(session?.user?.name || "Demo User");
-  const [userEmail, setUserEmail] = useState<string>(session?.user?.email || "demo@railwaypnr.com");
-
-  useEffect(() => {
-    if (session?.user?.email) {
-      const savedName = localStorage.getItem(`profile_name_${session.user.email}`);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (savedName) setUserName(savedName);
-      const savedEmail = localStorage.getItem(`profile_email_${session.user.email}`);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (savedEmail) setUserEmail(savedEmail);
+  const [userName, setUserName] = useState<string>(() => {
+    if (session?.user?.email && typeof window !== "undefined") {
+      return localStorage.getItem(`profile_name_${session.user.email}`) || session.user.name || "Demo User";
     }
-  }, [session?.user?.email]);
+    return session?.user?.name || "Demo User";
+  });
+  const [userEmail, setUserEmail] = useState<string>(() => {
+    if (session?.user?.email && typeof window !== "undefined") {
+      return localStorage.getItem(`profile_email_${session.user.email}`) || session.user.email || "demo@railwaypnr.com";
+    }
+    return session?.user?.email || "demo@railwaypnr.com";
+  });
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,10 +250,11 @@ export function DashboardClient({ session, initialTab }: DashboardClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, selectedStation]);
 
-  const [currentLang, setCurrentLang] = useState<LanguageCode>("en");
+  const [currentLang, setCurrentLang] = useState<LanguageCode>(() =>
+    typeof window !== "undefined" ? getSavedLanguage() : "en"
+  );
 
   useEffect(() => {
-    setCurrentLang(getSavedLanguage());
     const handleLangChange = (e: CustomEvent<LanguageCode>) => {
       setCurrentLang(e.detail);
     };

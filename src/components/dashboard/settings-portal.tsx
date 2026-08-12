@@ -4,18 +4,14 @@
 import { useState, useEffect } from "react";
 import { 
   applyTheme, 
-  getSavedTheme, 
   ThemeMode, 
   applyTextScaling, 
-  getSavedTextScaling, 
   TextScaleMode,
   applyReducedMotion,
-  getSavedReducedMotion,
-  applyHighContrast,
-  getSavedHighContrast
+  applyHighContrast
 } from "@/lib/theme-utils";
 import { updateProfile, changePassword } from "@/actions/settings";
-import { SUPPORTED_LANGUAGES, getSavedLanguage, setSavedLanguage, LanguageCode, useTranslation } from "@/lib/i18n";
+import { SUPPORTED_LANGUAGES, setSavedLanguage, LanguageCode, useTranslation } from "@/lib/i18n";
 import {
   User,
   Shield,
