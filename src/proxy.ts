@@ -1,3 +1,10 @@
+/**
+ * @file proxy.ts
+ * @description Next.js 16+ Middleware entry point for route authentication and authorization.
+ * It initializes NextAuth using edge-compatible configuration options to handle routing
+ * validation before page rendering occurs.
+ */
+
 import NextAuth from "next-auth";
 import { authConfig } from "@/auth.config";
 

@@ -1,3 +1,10 @@
+/**
+ * @file route.ts
+ * @description API endpoint to retrieve the live boarding passenger manifest for a specific station.
+ * Restricts access to staff or admin users, fetches relevant journey bookings within a 4-day window,
+ * and formats the response for consumption by dashboard trackers.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/prisma";

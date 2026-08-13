@@ -1,3 +1,10 @@
+/**
+ * @file route.ts
+ * @description API endpoint to fetch live PNR (Passenger Name Record) status.
+ * Handles validation, logs search history for authenticated users,
+ * checks database bookings, and returns mock/real-time PNR journey details.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
@@ -111,6 +118,15 @@ const PNR_DATABASE: Record<string, Omit<PnrResponseData, "lastUpdated">> = {
   },
 };
 
+/**
+ * GET handler to retrieve status for a single PNR code.
+ * Validates parameter format, logs query to search history for logged-in users,
+ * checks seed DB and returns PNR response payload.
+ *
+ * @param request - NextRequest object.
+ * @param context - Route params containing the 10-digit PNR.
+ * @returns JSON response containing PnrResponseData or validation/server errors.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ pnr: string }> }

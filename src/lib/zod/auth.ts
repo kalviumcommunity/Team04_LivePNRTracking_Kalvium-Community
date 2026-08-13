@@ -1,5 +1,14 @@
+/**
+ * @file auth.ts
+ * @description Zod validation schemas and TypeScript types for user registration and login forms.
+ * Used for front-end and server-side request payload validation.
+ */
+
 import { z } from "zod";
 
+/**
+ * Zod validation schema for the login form inputs.
+ */
 export const LoginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
@@ -7,6 +16,9 @@ export const LoginSchema = z.object({
 
 export type LoginInput = z.infer<typeof LoginSchema>;
 
+/**
+ * Zod validation schema for the registration form inputs.
+ */
 export const RegisterSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),

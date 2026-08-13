@@ -1,5 +1,15 @@
+/**
+ * @file i18n.ts
+ * @description Internationalization (i18n) module for the Railway PNR Application.
+ * Supports multiple Indian regional languages (English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam).
+ * Provides translations for all UI labels, actions, forms, and portals.
+ */
+
 import { useState, useEffect } from "react";
 
+/**
+ * Supported language code identifiers.
+ */
 export type LanguageCode = 
   | "en" 
   | "hi" 
@@ -11,6 +21,9 @@ export type LanguageCode =
   | "kn" 
   | "ml";
 
+/**
+ * Structure mapping language code and its readable display label.
+ */
 export interface LanguageConfig {
   code: LanguageCode;
   label: string;
@@ -2790,6 +2803,12 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
   },
 };
 
+/**
+ * Retrieves the saved application language from localStorage.
+ * Defaults to "en" (English) if none is set or if saved code is invalid/during SSR.
+ *
+ * @returns The active LanguageCode.
+ */
 export function getSavedLanguage(): LanguageCode {
   if (typeof window === "undefined") return "en";
   const saved = localStorage.getItem("app_language");
@@ -2800,18 +2819,38 @@ export function getSavedLanguage(): LanguageCode {
   return "en";
 }
 
+/**
+ * Persists the user's selected language in localStorage and dispatches a
+ * custom "languageChange" event to update components dynamically.
+ *
+ * @param code - The LanguageCode to set.
+ */
 export function setSavedLanguage(code: LanguageCode) {
   if (typeof window === "undefined") return;
   localStorage.setItem("app_language", code);
   window.dispatchEvent(new CustomEvent("languageChange", { detail: code }));
 }
 
+/**
+ * Translates a key based on the specified or default language.
+ * Performs a fallback to English if translation is missing.
+ *
+ * @param key - The translation key.
+ * @param lang - Optional specific language code to translate into.
+ * @returns The translated string.
+ */
 export function t(key: string, lang?: LanguageCode): string {
   const currentLang = lang || getSavedLanguage();
   const langDict = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
   return langDict[key] || TRANSLATIONS.en[key] || key;
 }
 
+/**
+ * Custom React hook that subscribes to language change events
+ * and provides translation utility.
+ *
+ * @returns An object containing the current language code and translation function `t`.
+ */
 export function useTranslation() {
   const [lang, setLang] = useState<LanguageCode>(() => getSavedLanguage());
 

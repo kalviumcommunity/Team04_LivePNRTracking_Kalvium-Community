@@ -1,5 +1,11 @@
 "use server";
 
+/**
+ * @file admin.ts
+ * @description Server actions handling administrative controls: managing staff roster lists,
+ * passenger manifests logs, and auditing platform safety events.
+ */
+
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";

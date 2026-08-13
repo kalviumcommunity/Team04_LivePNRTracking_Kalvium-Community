@@ -1,3 +1,10 @@
+/**
+ * @file page.tsx
+ * @description Forgot password request route component.
+ * Provides a form interface for users to enter their registered email address,
+ * initiating a password reset process by invoking the forgotPassword server action.
+ */
+
 "use client";
 
 import { useState, useTransition } from "react";
@@ -19,6 +26,9 @@ const ForgotPasswordSchema = z.object({
 
 type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 
+/**
+ * ForgotPasswordPage Component. Renders the forgot password form.
+ */
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");

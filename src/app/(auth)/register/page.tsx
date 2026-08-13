@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description User registration route component.
+ * Displays the RegisterForm component surrounded by a consistent theme layout.
+ */
+
 import { RegisterForm } from "@/components/auth/register-form";
 import Link from "next/link";
 import { Home } from "lucide-react";
@@ -7,6 +13,9 @@ export const metadata = {
   description: "Sign up for ixigo PNR Tracker. Track trains, book tickets, and manage your journeys.",
 };
 
+/**
+ * RegisterPage Component. Renders registration container layout.
+ */
 export default function RegisterPage() {
   return (
     <main

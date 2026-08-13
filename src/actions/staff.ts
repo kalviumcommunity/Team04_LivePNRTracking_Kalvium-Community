@@ -1,10 +1,18 @@
 "use server";
 
+/**
+ * @file staff.ts
+ * @description Server actions handling staff/admin tasks: managing passenger lists,
+ * seat reallocations, catering statuses, shift rosters, GPS check-ins, and luggage weight assignments.
+ */
+
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-// Helper to authenticate staff user and return DB record
+/**
+ * Helper to authenticate staff user and return DB record
+ */
 async function getAuthenticatedStaff() {
   const session = await auth();
   if (!session?.user?.email) {

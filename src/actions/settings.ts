@@ -1,11 +1,19 @@
 "use server";
 
+/**
+ * @file settings.ts
+ * @description Server actions handling account preferences, security updates, password adjustments,
+ * and profile detail modifications.
+ */
+
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
-// Helper to authenticate user and return DB record
+/**
+ * Helper to authenticate user and return DB record
+ */
 async function getAuthenticatedUser() {
   const session = await auth();
   if (!session?.user?.email) {

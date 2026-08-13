@@ -1,4 +1,9 @@
-"use server"; // Marks this file's functions as Next.js Server Actions, running exclusively on the server
+"use server";
+
+/**
+ * @file login.ts
+ * @description Server action for handling passenger credentials authentication via NextAuth.
+ */
 
 import { signIn } from "@/auth";
 import { LoginSchema, type LoginInput } from "@/lib/zod/auth";

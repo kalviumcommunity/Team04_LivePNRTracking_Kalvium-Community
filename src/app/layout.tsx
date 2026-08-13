@@ -1,3 +1,9 @@
+/**
+ * @file layout.tsx
+ * @description Root layout component for the application. Sets up global font families,
+ * site metadata, custom theme/accessibility initialization script, and global UI components (GlobalAlert).
+ */
+
 import type { Metadata } from "next";
 import { Space_Grotesk, Geist_Mono } from "next/font/google";
 import Script from "next/script";
@@ -14,6 +20,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * Site metadata configuration (title, description, favicons).
+ */
 export const metadata: Metadata = {
   title: "ixigo - Smart PNR Status Tracker & Railway Portal",
   description: "Real-time IRCTC PNR tracking, booking history, and train status portal.",
@@ -22,6 +31,11 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * RootLayout component wrapping all pages.
+ * Handles server-side/client-side page wrappers, custom head injection,
+ * and app-wide UI styling initializations.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

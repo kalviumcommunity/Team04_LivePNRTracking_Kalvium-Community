@@ -1,3 +1,9 @@
+/**
+ * @file icon.tsx
+ * @description Dynamic favicon/app icon generator using Next.js ImageResponse (OpenGraph/OG).
+ * Dynamically draws an SVG train icon over an orange gradient.
+ */
+
 import { ImageResponse } from "next/og";
 
 // Route segment config
@@ -10,7 +16,11 @@ export const size = {
 };
 export const contentType = "image/png";
 
-// Image generation
+/**
+ * Renders the application icon as a PNG image stream.
+ *
+ * @returns ImageResponse containing the generated visual.
+ */
 export default function Icon() {
   return new ImageResponse(
     (

@@ -1,4 +1,9 @@
-"use server"; // Marks this file's functions as Next.js Server Actions, running exclusively on the server
+"use server";
+
+/**
+ * @file register.ts
+ * @description Server action for validating and registering new passenger accounts in the Prisma database.
+ */
 
 import bcrypt from "bcryptjs";
 import { RegisterSchema, type RegisterInput } from "@/lib/zod/auth";

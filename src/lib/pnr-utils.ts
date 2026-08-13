@@ -1,3 +1,12 @@
+/**
+ * @file pnr-utils.ts
+ * @description Utility functions for PNR (Passenger Name Record) validation, formatting, 
+ * metadata extraction, and UI styling helpers (e.g. travel class badge colors).
+ */
+
+/**
+ * Metadata structure for a PNR record containing train and route information.
+ */
 export interface PnrMetadata {
   pnr: string;
   trainName: string;
@@ -8,6 +17,9 @@ export interface PnrMetadata {
   toCode: string;
 }
 
+/**
+ * Hardcoded mock database map for simulation of known system PNRs.
+ */
 export const PNR_DATABASE_MAP: Record<string, Omit<PnrMetadata, "pnr">> = {
   "4109857123": {
     trainName: "Rajdhani Express",
@@ -43,6 +55,19 @@ export const PNR_DATABASE_MAP: Record<string, Omit<PnrMetadata, "pnr">> = {
   },
 };
 
+/**
+ * Retrieves the full train and route metadata for a given PNR string.
+ * It resolves the metadata based on:
+ * 1. Existing database booking details (if provided)
+ * 2. Predefined simulation database map (known PNRs)
+ * 3. Pipe-separated encoded metadata in the favorite PNR label
+ * 4. A dynamic/random mock fallback for general 10-digit numeric codes
+ *
+ * @param pnr - The 10-digit Passenger Name Record string.
+ * @param label - An optional user-specified custom label or pipe-encoded metadata.
+ * @param booking - Optional booking object from the database containing route info.
+ * @returns An object of type PnrMetadata.
+ */
 export function getPnrMetadata(
   pnr: string,
   label?: string | null,
@@ -100,15 +125,33 @@ export function getPnrMetadata(
   };
 }
 
+/**
+ * Validates if the given string is a valid 10-digit numeric Indian Railways PNR.
+ *
+ * @param pnr - The PNR string to validate.
+ * @returns True if valid, false otherwise.
+ */
 export function isValidPnr(pnr: string): boolean {
   return /^\d{10}$/.test(pnr);
 }
 
+/**
+ * Formats a 10-digit PNR string into standard hyphenated format (e.g. 123-456-7890).
+ *
+ * @param pnr - The 10-digit PNR string.
+ * @returns The formatted hyphenated string, or the original string if invalid.
+ */
 export function formatPnr(pnr: string): string {
   if (!isValidPnr(pnr)) return pnr;
   return `${pnr.slice(0, 3)}-${pnr.slice(3, 6)}-${pnr.slice(6)}`;
 }
 
+/**
+ * Resolves the CSS styling class string for a travel class badge (e.g., 1A, 2A, 3A, SL).
+ *
+ * @param travelClass - The class name code (e.g., "1A", "3A", "SL").
+ * @returns A string of Tailwind CSS classes to style the badge.
+ */
 export function getSeatClassBadge(travelClass: string): string {
   if (travelClass.includes("1A") || travelClass.includes("Executive")) {
     return "bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200";

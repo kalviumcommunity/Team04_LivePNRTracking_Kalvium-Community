@@ -1,5 +1,11 @@
 "use server";
 
+/**
+ * @file reset-password.ts
+ * @description Server action for completing password resets. Verifies token validity
+ * and updates user passwords securely in the database after hashing.
+ */
+
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/prisma";
 import { z } from "zod";
@@ -9,6 +15,12 @@ const ResetPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+/**
+ * Resets a user's password using a verification token.
+ *
+ * @param values - Object containing the verification token and the new password.
+ * @returns Success or error state object.
+ */
 export async function resetPassword(values: z.infer<typeof ResetPasswordSchema>) {
   const validatedFields = ResetPasswordSchema.safeParse(values);
 

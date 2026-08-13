@@ -1,5 +1,11 @@
 "use server";
 
+/**
+ * @file admin-login.ts
+ * @description Server action for handling administrator credentials login.
+ * Validates parameters, verifies the admin key, records audit logs, and redirects to dashboard.
+ */
+
 import { signIn } from "@/auth";
 import { db } from "@/lib/prisma";
 import { AdminLoginSchema, type AdminLoginInput } from "@/lib/zod/admin-auth";

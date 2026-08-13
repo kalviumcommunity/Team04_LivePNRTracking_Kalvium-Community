@@ -1,10 +1,18 @@
 "use server";
 
+/**
+ * @file passenger.ts
+ * @description Server actions handling passenger queries, booking metrics, incident reports,
+ * notifications management, and favorite PNR configurations.
+ */
+
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-// Helper to authenticate user and return DB record
+/**
+ * Helper to authenticate user and return DB record
+ */
 async function getAuthenticatedUser() {
   const session = await auth();
   if (!session?.user?.email) {

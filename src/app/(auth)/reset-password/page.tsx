@@ -1,3 +1,10 @@
+/**
+ * @file page.tsx
+ * @description Reset password route component.
+ * Validates the reset token from the URL query parameters and allows the user
+ * to choose a new password by calling the resetPassword server action.
+ */
+
 "use client";
 
 import { useState, useTransition, Suspense } from "react";

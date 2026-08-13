@@ -1,5 +1,11 @@
 "use server";
 
+/**
+ * @file forgot-password.ts
+ * @description Server action for handling password reset requests. Generates a secure token
+ * and creates or updates a PasswordResetToken record in the database.
+ */
+
 import { db } from "@/lib/prisma";
 import { z } from "zod";
 import crypto from "crypto";
@@ -8,6 +14,12 @@ const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
 
+/**
+ * Initiates forgot password sequence. Creates a unique reset token valid for 1 hour.
+ *
+ * @param values - Object containing the user's email address.
+ * @returns Success or error state object.
+ */
 export async function forgotPassword(values: { email: string }) {
   const validatedFields = ForgotPasswordSchema.safeParse(values);
 

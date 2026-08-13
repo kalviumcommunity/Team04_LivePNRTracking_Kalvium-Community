@@ -1,7 +1,17 @@
+/**
+ * @file page.tsx
+ * @description User login route component.
+ * Renders the page containing the LoginForm component, styled with aesthetic
+ * ambient glows and promotional rail-travel tracking visuals.
+ */
+
 import { LoginForm } from "@/components/auth/login-form";
 import { Train, Home } from "lucide-react";
 import Link from "next/link";
 
+/**
+ * LoginPage Component. Renders login layout and authentication form container.
+ */
 export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center lg:grid lg:grid-cols-12 overflow-hidden bg-[#f9f5f0] dark:bg-slate-950 font-sans">

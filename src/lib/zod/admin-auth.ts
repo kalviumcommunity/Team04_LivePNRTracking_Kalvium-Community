@@ -1,3 +1,9 @@
+/**
+ * @file admin-auth.ts
+ * @description Zod validation schema and TypeScript type definitions for administrative login operations.
+ * Requires email, password, and the system admin verification key.
+ */
+
 import { z } from "zod";
 
 /**
