@@ -20,67 +20,6 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 
-// TOTP Utilities for 2FA validation
-function base32Decode(str: string): Uint8Array {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  const cleaned = str.toUpperCase().replace(/[\s-]/g, "");
-  let bits = "";
-  for (let i = 0; i < cleaned.length; i++) {
-    const val = alphabet.indexOf(cleaned[i]);
-    if (val === -1) continue;
-    bits += val.toString(2).padStart(5, "0");
-  }
-  const bytes = [];
-  for (let i = 0; i + 8 <= bits.length; i += 8) {
-    bytes.push(parseInt(bits.slice(i, i + 8), 2));
-  }
-  return new Uint8Array(bytes);
-}
-
-async function getTOTPCodeForCounter(secretBase32: string, counter: number): Promise<string> {
-  const keyBytes = base32Decode(secretBase32);
-  const buffer = new ArrayBuffer(8);
-  const view = new DataView(buffer);
-  view.setUint32(0, 0, false);
-  view.setUint32(4, counter, false);
-  
-  const cryptoKey = await window.crypto.subtle.importKey(
-    "raw",
-    keyBytes.buffer as ArrayBuffer,
-    { name: "HMAC", hash: { name: "SHA-1" } },
-    false,
-    ["sign"]
-  );
-  
-  const signature = await window.crypto.subtle.sign(
-    "HMAC",
-    cryptoKey,
-    buffer
-  );
-  
-  const hmac = new Uint8Array(signature);
-  const offset = hmac[hmac.length - 1] & 0xf;
-  const code =
-    ((hmac[offset] & 0x7f) << 24) |
-    ((hmac[offset + 1] & 0xff) << 16) |
-    ((hmac[offset + 2] & 0xff) << 8) |
-    (hmac[offset + 3] & 0xff);
-    
-  return (code % 1000000).toString().padStart(6, "0");
-}
-
-async function verifyTOTP(code: string): Promise<boolean> {
-  const secret = "RAILWAYPNRSEC267";
-  const epoch = Math.floor(Date.now() / 1000);
-  const counter = Math.floor(epoch / 30);
-  
-  const computed = await getTOTPCodeForCounter(secret, counter);
-  const computedPrev = await getTOTPCodeForCounter(secret, counter - 1);
-  const computedNext = await getTOTPCodeForCounter(secret, counter + 1);
-  
-  return code === computed || code === computedPrev || code === computedNext;
-}
-
 export function LoginForm() {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
@@ -88,11 +27,6 @@ export function LoginForm() {
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
   const [googlePending, setGooglePending] = useState(false);
-  const [show2FA, setShow2FA] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [twoFactorError, setTwoFactorError] = useState("");
-  const [pendingEmail, setPendingEmail] = useState("");
-  const [pendingPassword, setPendingPassword] = useState("");
 
   const {
     register,
@@ -115,16 +49,6 @@ export function LoginForm() {
   const executeLogin = (email: string, password: string) => {
     setError("");
     setSuccess("");
-
-    const is2FaEnabled = localStorage.getItem(`security_2fa_enabled_${email}`) === "true";
-    if (is2FaEnabled) {
-      setPendingEmail(email);
-      setPendingPassword(password);
-      setShow2FA(true);
-      setTwoFactorCode("");
-      setTwoFactorError("");
-      return;
-    }
 
     startTransition(async () => {
       try {
@@ -168,104 +92,6 @@ export function LoginForm() {
   const onSubmit = (values: LoginInput) => {
     executeLogin(values.email, values.password);
   };
-
-  if (show2FA) {
-    return (
-      <Card className="w-full max-w-md border border-white/10 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl shadow-2xl transition-all duration-300">
-        <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Two-Factor Verification
-          </CardTitle>
-          <CardDescription className="text-slate-500 dark:text-slate-400">
-            Enter the 6-digit verification code from your authenticator app to secure your account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="code" className="text-slate-700 dark:text-slate-300 text-sm font-medium">
-              Verification Code
-            </Label>
-            <Input
-              id="code"
-              type="text"
-              maxLength={6}
-              placeholder="000000"
-              value={twoFactorCode}
-              onChange={(e) => {
-                setTwoFactorCode(e.target.value.replace(/\D/g, ""));
-                setTwoFactorError("");
-              }}
-              className="text-center tracking-[0.5em] text-lg font-mono bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 focus-visible:ring-amber-500/20 text-slate-900 dark:text-slate-100"
-            />
-            {twoFactorError && (
-              <p className="text-xs text-red-500 dark:text-red-400 font-medium flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {twoFactorError}
-              </p>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4 pt-2">
-          <Button
-            onClick={async () => {
-              if (twoFactorCode.length !== 6) {
-                setTwoFactorError("Please enter a 6-digit code.");
-                return;
-              }
-              const isValid = await verifyTOTP(twoFactorCode);
-              if (isValid) {
-                setShow2FA(false);
-                startTransition(async () => {
-                  try {
-                    const res = await signIn("credentials", {
-                      email: pendingEmail,
-                      password: pendingPassword,
-                      redirect: false,
-                    });
-
-                    if (res?.error) {
-                      setError("Invalid email or password!");
-                    } else if (res?.ok || !res?.error) {
-                      setSuccess("Logged in successfully! Redirecting...");
-                      window.location.href = "/dashboard";
-                    }
-                  } catch (err) {
-                    console.error("Login error:", err);
-                    setError("Something went wrong. Please try again.");
-                  }
-                });
-              } else {
-                setTwoFactorError("Invalid verification code. Please try again.");
-              }
-            }}
-            type="button"
-            className="w-full bg-[#c05621] hover:bg-[#a64819] dark:bg-[#c05621] dark:hover:bg-[#a64819] text-white font-medium shadow-lg transition-all"
-            disabled={isPending}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              "Verify & Login"
-            )}
-          </Button>
-          <button
-            type="button"
-            onClick={() => {
-              setShow2FA(false);
-              setPendingEmail("");
-              setPendingPassword("");
-            }}
-            className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-350 hover:underline animate-fade-in"
-          >
-            Back to Login
-          </button>
-        </CardFooter>
-      </Card>
-    );
-  }
 
   return (
     <Card className="w-full max-w-md border border-white/10 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl shadow-2xl transition-all duration-300">

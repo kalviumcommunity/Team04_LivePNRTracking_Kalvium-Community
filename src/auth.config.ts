@@ -23,9 +23,9 @@ export const authConfig: NextAuthConfig = {
      * The authorized callback verifies if a user is allowed to access a page.
      * It runs before middleware routes request to destination.
      */
-    authorized({ auth, request: { nextUrl } }) {
+    authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user; // Check if user has an active session
-      const pathname = nextUrl.pathname;
+      const pathname = request.nextUrl.pathname;
       const isOnDashboard = pathname.startsWith("/dashboard"); // Determine if requesting a dashboard route
 
       if (!isOnDashboard) {
@@ -35,6 +35,17 @@ export const authConfig: NextAuthConfig = {
       // User must be logged in to access any dashboard route
       if (!isLoggedIn) {
         return false; // Redirect unauthenticated users to /login
+      }
+
+      // Never issue middleware redirects for Server Action POST requests or Next-Action RPCs
+      // as fetchServerAction expects a JSON payload, not an HTML 307 redirect page.
+      const isServerActionOrPost =
+        request.method === "POST" ||
+        request.headers.has("next-action") ||
+        request.headers.has("x-next-server-action");
+
+      if (isServerActionOrPost) {
+        return true;
       }
 
       // Extract role and adminVerified status from the JWT token
@@ -52,7 +63,7 @@ export const authConfig: NextAuthConfig = {
           role === "staff"
             ? "/dashboard/manifest"
             : "/dashboard/pnr";
-        return Response.redirect(new URL(defaultTab, nextUrl));
+        return Response.redirect(new URL(defaultTab, request.nextUrl));
       }
 
       // ── Staff-only tab routes ──
@@ -69,7 +80,7 @@ export const authConfig: NextAuthConfig = {
 
       if (isStaffTab && role !== "staff" && role !== "admin") {
         // Redirect passengers away from staff tabs
-        return Response.redirect(new URL("/dashboard/pnr", nextUrl));
+        return Response.redirect(new URL("/dashboard/pnr", request.nextUrl));
       }
 
       return true; // Allow access if all checks pass

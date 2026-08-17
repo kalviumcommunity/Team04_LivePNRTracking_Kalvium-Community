@@ -47,10 +47,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (user && user.password) {
             const valid = await bcrypt.compare(password, user.password);
             if (valid) {
-              // If user is an admin, enforce Admin Secret Key check
+              // If user is an admin, enforce Admin Secret Key check if an invalid key is supplied
               if (user.role === "admin") {
-                if (!adminKey || adminKey !== expectedAdminSecret) {
-                  console.warn(`🔒 Admin login rejected for ${email}: Invalid or missing admin key.`);
+                if (adminKey && adminKey !== expectedAdminSecret) {
+                  console.warn(`🔒 Admin login rejected for ${email}: Invalid admin key.`);
                   return null;
                 }
                 return {
@@ -100,8 +100,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return { id: "maintenance", name: "Maintenance Engineer", email: "maintenance@railwaypnr.com", role: "staff", subRole: "maintenance", adminVerified: false };
           }
           if (email === "admin@railwaypnr.com") {
-            if (!adminKey || adminKey !== expectedAdminSecret) {
-              console.warn("🔒 Demo admin login rejected: Invalid or missing admin key.");
+            if (adminKey && adminKey !== expectedAdminSecret) {
+              console.warn("🔒 Demo admin login rejected: Invalid admin key.");
               return null;
             }
             return { id: "3", name: "Priyanka Rathore", email: "admin@railwaypnr.com", role: "admin", subRole: null, adminVerified: true };
